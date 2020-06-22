@@ -4,7 +4,7 @@ import logging
 import re
 from pathlib import Path
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Union
 
 import aiohttp
 import discord
@@ -118,11 +118,11 @@ class AutoCord(commands.Bot):
         self.colour = preferences.embed_colour
 
     @property
-    def owners(self):
+    def owners(self) -> List[discord.User]:
         return [self.get_user(owner_id) for owner_id in self.owner_ids]
 
     @property
-    def channels(self):
+    def channels(self) -> List[Union[discord.TextChannel, discord.User]]:
         return [self.get_channel(preferences.channel_id)] or self.owners
 
     @property

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
-from typing import Callable, Awaitable
+from typing import Callable
 
 import aiohttp
 from subprocess import getoutput
@@ -23,9 +23,9 @@ class Contexter(commands.Context):
         self.steam_bots = self.bot.client.steam_bots
 
     async def get_output(self, command: str):
-        return await self.bot.loop.run_in_executor(None, getoutput, command)
+        return self.run_async(getoutput, command)
 
-    async def run_async(self, func: Callable[..., Awaitable], *args):
+    async def run_async(self, func: Callable, *args):
         return await self.bot.loop.run_in_executor(None, func, *args)
 
     async def bool(self, value: bool):

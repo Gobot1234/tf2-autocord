@@ -12,7 +12,7 @@ from pathlib import Path
 from platform import python_version
 from subprocess import getoutput
 from time import perf_counter
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import discord
 import humanize
@@ -27,11 +27,15 @@ from .utils.choice import wait_for_owners
 from .utils.paginator import ScrollingPaginator
 from .utils.converters import SteamBot
 
+if TYPE_CHECKING:
+    from ..main import AutoCord
+    from .utils.context import Contexter
+
 
 class Discord(commands.Cog):
     """Commands that are mostly help commands but more useful"""
 
-    def __init__(self, bot):
+    def __init__(self, bot: 'AutoCord'):
         self.bot = bot
         self.profit_graphing.start()
         self.github_update.start()
@@ -73,11 +77,11 @@ class Discord(commands.Cog):
                 fixed.append(total)
 
             tod_profit, tot_profit, pred_profit = fixed
-            graphdata = [tod_profit, tot_profit, pred_profit, self.bot.trades]
-            tempprofit = {self.bot.current_time.split()[0]: graphdata}
-            data = json.load(open('Login_details\\profit_graphing.json'))
-            data.update(tempprofit)
-            json.dump(data, open('Login_details\\profit_graphing.json'), indent=4)
+            graph_data = [tod_profit, tot_profit, pred_profit, self.bot.trades]
+            temp_profit = {self.bot.current_time.split()[0]: graph_data}
+            data = json.load(open('Login_details/profit_graphing.json'))
+            data.update(temp_profit)
+            json.dump(data, open('Login_details/profit_graphing.json'), indent=4)
             await asyncio.sleep(120)
 
     @tasks.loop(hours=24)
@@ -97,20 +101,26 @@ class Discord(commands.Cog):
         else:
             for owner in self.bot.owners:
                 message = await owner.send('Fetching info on the latest GitHub changes...')
-                ctx = await self.bot.get_context(message)
+                ctx: 'Contexter' = await self.bot.get_context(message)
                 await ctx.trigger_typing()
                 resp = await ctx.request('GET', 'https://api.github.com/repos/Gobot1234/tf2-autocord/commits')
-                version = resp[0]['commit']['message'].splitlines()
+                info = resp[0]['commit']['message'].splitlines()
+                version = info[0]
+                commit_message = '\n'.join(version[1:]).strip()
                 embed = discord.Embed(
-                    title=f'Version {version[0]} has been pushed to the GitHub repo. Do you want to install it?',
-                    description=f'__Update info is as follows:__\n```{version[1:]}```', color=discord.Colour.blurple())
+                    title=f'Version {version[0]} has been pushed to the GitHub repo. '
+                          f'Do you want to install it?',
+                    description=f'__Update info is as follows:__\n```{commit_message}```',
+                    color=discord.Colour.blurple()
+                )
                 await message.edit(content=None, embed=embed)
 
             if await wait_for_owners(ctx):
                 for owner in self.bot.owners:
                     await owner.send('Updating from the latest GitHub push')
-                command = self.bot.get_command('git pull')
-                await ctx.invoke(command, True)
+                command = await ctx.get_output('git pull')
+                for owner in self.bot.owners:
+                    await owner.send(command)
             else:
                 for owner in self.bot.owners:
                     await owner.send(f"I won't update yet")
