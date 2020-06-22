@@ -97,7 +97,7 @@ class Discord(commands.Cog):
         else:
             for owner in self.bot.owners:
                 message = await owner.send('Fetching info on the latest GitHub changes...')
-                ctx = self.bot.get_context(message)
+                ctx = await self.bot.get_context(message)
                 await ctx.trigger_typing()
                 resp = await ctx.request('GET', 'https://api.github.com/repos/Gobot1234/tf2-autocord/commits')
                 version = resp[0]['commit']['message']

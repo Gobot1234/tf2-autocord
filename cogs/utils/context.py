@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+from typing import Callable, Awaitable
+
 import aiohttp
 from subprocess import getoutput
 
@@ -23,8 +25,8 @@ class Contexter(commands.Context):
     async def get_output(self, command: str):
         return await self.bot.loop.run_in_executor(None, getoutput, command)
 
-    async def run_async(self, callable, *args):
-        return await self.bot.loop.run_in_executor(None, callable, *args)
+    async def run_async(self, func: Callable[..., Awaitable], *args):
+        return await self.bot.loop.run_in_executor(None, func, *args)
 
     async def bool(self, value: bool):
         try:
@@ -32,7 +34,7 @@ class Contexter(commands.Context):
         except HTTPException:
             pass
 
-    async def bin(self, message: Message, *, timeout=90):
+    async def bin(self, message: Message, *, timeout: float = 90):
         def check(reaction, user):
             return user == self.author and str(reaction.emoji) == '🗑️'
         await message.add_reaction('🗑️')

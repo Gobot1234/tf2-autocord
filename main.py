@@ -4,6 +4,7 @@ import logging
 import re
 from pathlib import Path
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import aiohttp
 import discord
@@ -16,12 +17,14 @@ from cogs.utils.context import Contexter
 from cogs.utils.formats import human_join
 from config import preferences, sensitives
 
+if TYPE_CHECKING:
+    import asyncio
+
 log = logging.getLogger(__name__)
 
 
 class SteamClient(steam.Client):
-    def __init__(self, loop, bot):
-        print('inited')
+    def __init__(self, loop: 'asyncio.AbstractEventLoop', bot: 'AutoCord'):
         super().__init__(loop=loop)
         self.bot = bot
         self.steam_bots = None
@@ -46,23 +49,24 @@ class SteamClient(steam.Client):
         embed.add_field(
             name='User Message:',
             value=f'You have a message from a user:\n> {message.content.split(":", 1)[1]}\n'
-                  f'Type {self.bot.prefix}acknowledged to stop receiving these messages.')
+                  f'Type {self.bot.command_prefix}acknowledged to stop receiving these messages.')
         if self.first:
             self.bot.pins = []
             for owner in self.bot.owners:
                 message = await owner.send(embed=embed)
                 try:
-                    await self.bot.message.pin()
+                    await message.pin()
                 except discord.HTTPException:
                     pass
                 else:
                     self.bot.messages.append(message)
         else:
-            await self.bot.owner.send(embed=embed)
+            for channel in self.bot.channels:
+                await channel.send(embed=embed)
 
     async def on_message(self, message: steam.Message):
         if message.author in self.steam_bots:
-            log.info(f'Recieved a message from {message.author}')
+            log.info(f'Received a message from {message.author}')
             if message.content.startswith('Message from'):  # we have a user message
                 log.debug('Starting a user message loop')
                 self.user_message.cancel()
@@ -89,26 +93,29 @@ class SteamClient(steam.Client):
                     embed.set_footer(text=f'Trade #{trade_id}',
                                      icon_url=self.bot.user.avatar_url)
                     embed.timestamp = datetime.now()
-                    await self.bot.channel.send(embed=embed)
+                    for channel in self.bot.channels:
+                        await channel.send(embed=embed)
                 else:
-                    embed = discord.Embed(color=self.bot.color, title='New Message:', description=message.content)
+                    embed = discord.Embed(color=self.bot.colour, title='New Message:', description=message.content)
                     embed.set_footer(text=datetime.now().strftime('%c'), icon_url=self.bot.user.avatar_url)
-                    await self.bot.owner.send(embed=embed)
+                    for channel in self.bot.channels:
+                        await channel.send(embed=embed)
 
 
 class AutoCord(commands.Bot):
 
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or(preferences.command_prefix),
-                         case_insensitive=True)
+                         case_insensitive=True, owner_ids=preferences.owner_ids)
         self.client = SteamClient(loop=self.loop, bot=self)
-        self.owner_ids = preferences.owner_ids
         self.first = True
 
         self.log = None
         self.session = None
         self.initial_extensions = None
         self.launch_time: datetime
+        self.messages = []
+        self.colour = preferences.embed_colour
 
     @property
     def owners(self):
@@ -180,18 +187,14 @@ class AutoCord(commands.Bot):
         self.load_extension('jishaku')
 
         self.launch_time = datetime.utcnow()
-        try:
-            '''self.loop.create_task(
-                self.client.start(
-                    username=sensitives.username,
-                    password=sensitives.password,
-                    shared_secret=sensitives.shared_secret
-                )
-            )'''
-            await super().start(sensitives.token)
-        finally:
-            print('Shutting Down')
-            await self.close()
+        self.loop.create_task(
+            self.client.start(
+                username=sensitives.username,
+                password=sensitives.password,
+                shared_secret=sensitives.shared_secret
+            )
+        )
+        await super().start(sensitives.token)
 
     async def get_context(self, message, *, cls=None):
         return await super().get_context(message, cls=cls or Contexter)
@@ -208,8 +211,4 @@ class AutoCord(commands.Bot):
 if __name__ == '__main__':
     print('Starting...')
     bot = AutoCord()
-    try:
-        bot.loop.run_until_complete(bot.start())
-    finally:
-        log.info('Shutdown, raising a SystemExit')
-        raise SystemExit
+    bot.run()
