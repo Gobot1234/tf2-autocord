@@ -100,14 +100,10 @@ class Discord(commands.Cog):
                 ctx = await self.bot.get_context(message)
                 await ctx.trigger_typing()
                 resp = await ctx.request('GET', 'https://api.github.com/repos/Gobot1234/tf2-autocord/commits')
-                version = resp[0]['commit']['message']
-
-                resp = await ctx.request('GET', resp[0]['comments_url'])
-                comment = resp[0] or "I didn't provide any update info ¯\\_(ツ)_/¯"
-
+                version = resp[0]['commit']['message'].splitlines()
                 embed = discord.Embed(
-                    title=f'Version {version} has been pushed to the GitHub repo. Do you want to install it?',
-                    description=f'__Update info is as follows:__\n```{comment}```', color=discord.Colour.blurple())
+                    title=f'Version {version[0]} has been pushed to the GitHub repo. Do you want to install it?',
+                    description=f'__Update info is as follows:__\n```{version[1:]}```', color=discord.Colour.blurple())
                 await message.edit(content=None, embed=embed)
 
             if await wait_for_owners(ctx):
