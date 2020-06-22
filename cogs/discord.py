@@ -106,9 +106,9 @@ class Discord(commands.Cog):
                 resp = await ctx.request('GET', 'https://api.github.com/repos/Gobot1234/tf2-autocord/commits')
                 info = resp[0]['commit']['message'].splitlines()
                 version = info[0]
-                commit_message = '\n'.join(version[1:]).strip()
+                commit_message = '\n'.join(info[1:]).strip()
                 embed = discord.Embed(
-                    title=f'Version {version[0]} has been pushed to the GitHub repo. '
+                    title=f'Version {version} has been pushed to the GitHub repo. '
                           f'Do you want to install it?',
                     description=f'__Update info is as follows:__\n```{commit_message}```',
                     color=discord.Colour.blurple()
