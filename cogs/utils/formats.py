@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from traceback import format_exception
+from typing import List
 
 
-def format_exec(exc):
-    return "".join(format_exception(type(exc), exc, exc.__traceback__))
+def format_exec(error: Exception, *, limit=None):
+    return "".join(format_exception(type(error), error, error.__traceback__, limit=limit))
 
 
-def format_error(error, *, strip=False):
-    formatted = "".join(format_exception(type(error), error, error.__traceback__, limit=1))
+def format_error(error: Exception, *, strip=False):
+    formatted = "".join(format_exec(error, limit=1))
     if strip:
         formatted = formatted.splitlines()
         formatted.pop(1)
@@ -17,9 +18,7 @@ def format_error(error, *, strip=False):
     return formatted
 
 
-def human_join(seq, delimiter=', ', final='and'):
-    if isinstance(seq, str):
-        return seq
+def human_join(seq: List[str], delimiter=', ', final='and'):
     size = len(seq)
     if size == 0:
         return ''
