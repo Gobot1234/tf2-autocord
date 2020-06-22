@@ -6,6 +6,7 @@ import json
 import discord
 from discord.ext import commands
 
+from .utils.context import Contexter
 from .utils.formats import human_join
 from .utils.choice import wait_for_bool, wait_for_options, wait_for_any, wait_for_digit
 
@@ -134,14 +135,15 @@ class Steam(commands.Cog):
         await ctx.send(f'Sent `{message}` to the bot')
 
     @commands.command(aliases=['bp'])
-    async def backpack(self, ctx):
+    async def backpack(self, ctx: 'Contexter'):
         """Get a link to your inventory and your bot's"""
         bptf = 'https://backpack.tf'
         embed = discord.Embed(
             title='Backpack.tf', url=bptf,
-            description=f"[Your backpack]({bptf}/profiles/{self.bot.client.user.id64})\n"
-                        f"[Your bot's backpack]({bptf}/profiles/{ctx.steam_bot.id64})",
+            description=f"[Your backpack]({bptf}/profiles/{self.bot.client.user.id64})\n",
             color=0x58788F)
+        for bot in ctx.steam_bots:
+            embed.description = f"{embed.description}\n[Your bot's backpack]({bptf}/profiles/{bot.id64})"
         embed.set_thumbnail(url=f'{bptf}/images/tf-icon.png')
         await ctx.send(embed=embed)
 

@@ -278,7 +278,7 @@ class Discord(commands.Cog):
                            'this command is limited to working every 2 hours so you can\'t spam me')
 
     @commands.command()
-    async def ping(self, ctx):
+    async def ping(self, ctx: 'Contexter'):
         """Check if your bot is online on both Steam and Discord"""
         embed = discord.Embed(color=discord.Colour.blurple()).set_author(name='Pong!')
         start = perf_counter()
@@ -297,7 +297,7 @@ class Discord(commands.Cog):
                         value=f'`{self.bot.latency * 1000:.2f}` ms.')
         embed.add_field(name=f':heartbeat: Steam Heartbeat latency is:',
                         value=f'`{self.bot.client.latency * 1000:.2f}` ms.')
-        embed.add_field(name=f'{ctx.emoji.text} Message latency is:',
+        embed.add_field(name=f'{ctx.emoji} Message latency is:',
                         value=f'`{message_duration:.2f}` ms.')
         embed.set_author(name='Pong!', icon_url=self.bot.user.avatar_url)
         await m.edit(embed=embed)

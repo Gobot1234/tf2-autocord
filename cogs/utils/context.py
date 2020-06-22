@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
-from typing import Callable
+from typing import Callable, TYPE_CHECKING, List
 
 import aiohttp
 from subprocess import getoutput
 
 from discord import PartialEmoji, HTTPException, Message
 from discord.ext import commands
+
+if TYPE_CHECKING:
+    import steam
 
 
 async def json_or_text(response):
@@ -20,10 +23,13 @@ async def json_or_text(response):
 class Contexter(commands.Context):
     def __init__(self, **attrs):
         super().__init__(**attrs)
-        self.steam_bots = self.bot.client.steam_bots
 
-    async def get_output(self, command: str):
-        return self.run_async(getoutput, command)
+    @property
+    def steam_bots(self) -> List[steam.User]:
+        return self.bot.client.steam_bots
+
+    async def get_output(self, command: str) -> str:
+        return await self.run_async(getoutput, command)
 
     async def run_async(self, func: Callable, *args):
         return await self.bot.loop.run_in_executor(None, func, *args)
@@ -39,7 +45,7 @@ class Contexter(commands.Context):
             return user == self.author and str(reaction.emoji) == '🗑️'
         await message.add_reaction('🗑️')
         try:
-            _, _ = await self.bot.wait_for('reaction_add', timeout=timeout, check=check)
+            *_, = await self.bot.wait_for('reaction_add', timeout=timeout, check=check)
         except asyncio.TimeoutError:
             try:
                 await message.clear_reactions()
