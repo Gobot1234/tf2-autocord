@@ -2,4 +2,4 @@
 
 import setuptools
 
-setuptools.setup(requirements=open('requirements.txt').read().splitlines())
+setuptools.setup(name='tf2-autocord', requirements=open('requirements.txt').read().splitlines())
