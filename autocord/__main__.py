@@ -4,7 +4,7 @@ import logging
 import re
 from pathlib import Path
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional
 
 import aiohttp
 import discord
@@ -12,9 +12,9 @@ import humanize
 import steam
 from discord.ext import commands, tasks
 
-from .cogs.utils import Contexter
-from .cogs.utils import human_join
-from .config import preferences, sensitives
+from autocord.cogs.utils.context import Contexter
+from autocord.cogs.utils.formats import human_join
+from autocord.config import preferences, sensitives
 
 if TYPE_CHECKING:
     import asyncio
@@ -160,10 +160,10 @@ class AutoCord(commands.Bot):
         format_string = '%(asctime)s : %(name)s - %(levelname)s | %(message)s'
         log_format = logging.Formatter(format_string)
 
-        log_file = Path('logs', 'bot.log')
-        log_file.parent.mkdir(exist_ok=True)
-        filename = f'autocord/logs/out--{datetime.now().strftime("%d-%m-%Y")}.log'
-        file_handler = logging.FileHandler(filename, encoding='utf-8', mode='w')
+        log_file = Path('logs')
+        log_file.mkdir(exist_ok=True)
+        filename = f'logs/out--{datetime.now().strftime("%d-%m-%Y")}.log'
+        file_handler = logging.FileHandler(filename)
         file_handler.setFormatter(log_format)
 
         log.setLevel(log_level)
@@ -171,8 +171,17 @@ class AutoCord(commands.Bot):
 
         logging.getLogger("discord").setLevel(logging.WARNING)
         logging.getLogger("steam").setLevel(logging.WARNING)
-        logging.getLogger("matplotlib").setLevel(logging.WARNING)
         log.info('Finished setting up logging')
+
+    # TODO subclass load ext
+
+    def load_extension(self, name: str):
+        try:
+            super().load_extension(name)
+        except Exception as exc:
+            bot.dispatch('extension_fail', name, exc)
+        else:
+            bot.dispatch('extension_load', name)
 
     async def start(self):
         self.setup_logging()

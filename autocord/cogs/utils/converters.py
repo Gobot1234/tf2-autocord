@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 class SteamCTX:
     @classmethod
-    def from_discord_context(cls, context: Contexter):
+    def from_discord_context(cls, context: "Contexter"):
         self = cls()
         self.bot = context.bot.client
         return self

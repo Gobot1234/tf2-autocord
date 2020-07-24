@@ -11,7 +11,7 @@ from discord.ext import commands
 
 if TYPE_CHECKING:
     import steam
-    from main import AutoCord
+    from ...__main__ import AutoCord
 
 
 async def json_or_text(response):
@@ -25,7 +25,7 @@ class Contexter(commands.Context):
     bot: "AutoCord"
 
     @property
-    def steam_bots(self) -> List[steam.User]:
+    def steam_bots(self) -> List["steam.User"]:
         return self.bot.client.steam_bots
 
     async def get_output(self, command: str) -> str:

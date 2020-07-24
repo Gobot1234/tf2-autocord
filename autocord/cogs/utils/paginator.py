@@ -34,10 +34,10 @@ class ScrollingPaginatorBase(menus.MenuPages):
     """The base for all "scrolling" paginators"""
     def __init__(self, *, entries: List[str], timeout=90):
         source = Sourcer(entries)
-        super().__init__(entries, timeout=timeout)
+        super().__init__(source, timeout=timeout)
         self.entries = entries
 
-    @menus.button('ℹ', skip_if=super())
+    @menus.button('ℹ')
     async def show_info(self, payload):
         """Shows this message"""
         embed = discord.Embed(title='Help with this message')

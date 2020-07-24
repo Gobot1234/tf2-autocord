@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import difflib
+import inspect
 import logging
 import os
 import traceback
@@ -10,7 +11,7 @@ from typing import List
 import discord
 from discord.ext import commands, menus
 
-from .. import __version__
+from autocord import __version__
 from .utils.formats import format_exec
 from .utils.paginator import ScrollingPaginatorBase
 
@@ -22,7 +23,6 @@ class HelpCommandPaginator(ScrollingPaginatorBase):
     def __init__(self, bot: commands.Bot, entries: List[str], help_command: "HelpCommand"):
         super().__init__(entries=entries)
         self.bot = bot
-        self.page = 0
         self.help_command = help_command
 
     async def send_initial_message(self, ctx, channel):
@@ -41,10 +41,10 @@ class HelpCommandPaginator(ScrollingPaginatorBase):
             value='`<...>` indicates a required argument\n'
                   '`[...]` indicates an optional argument.\n\n'
                   "**Don't however type these around your argument**")
-        helper = [(button.emoji, button.action.__doc__) for button in self.buttons.values()]
+        helper = [(button.emoji, inspect.getdoc(button.action)) for button in self.buttons.values()]
         embed.add_field(name='What do the buttons do?:',
-                        value='\n'.join([f'{button} - {doc}' for (button, doc) in helper if button and doc]))
-        embed.set_author(name=f'You were on page {self.page + 1}/{len(self.entries)} before',
+                        value='\n'.join(f'{button} - {doc}' for (button, doc) in helper if button and doc))
+        embed.set_author(name=f'You were on page {self.current_page + 1}/{len(self.entries)} before',
                          icon_url=self.ctx.author.avatar_url)
         embed.set_footer(text=f'Use "{self.help_command.clean_prefix}help <command>" for more info on a command.',
                          icon_url=self.bot.user.avatar_url)
@@ -68,7 +68,7 @@ class HelpCommandPaginator(ScrollingPaginatorBase):
                         useable_commands += 1
             except commands.CommandError:
                 pass
-        embed.set_footer(text=f'Page {self.page + 1}/{len(self.entries)}. '
+        embed.set_footer(text=f'Page {self.current_page + 1}/{len(self.entries)}. '
                               f'Use "{self.help_command.clean_prefix}help <command>" for more info on a command.',
                          icon_url=self.bot.user.avatar_url)
         embed.title = f'Help with {cog.qualified_name} ({useable_commands} ' \

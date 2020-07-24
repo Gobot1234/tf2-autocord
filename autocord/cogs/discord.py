@@ -18,14 +18,14 @@ import psutil
 import steam
 from discord.ext import commands, tasks
 
-from ..config import preferences
-from .. import __version__
+from autocord.config import preferences
+from autocord import __version__
 from .utils.choice import wait_for_owners
 from .utils.converters import SteamBot
+from .utils.context import Contexter
 
 if TYPE_CHECKING:
     from ..__main__ import AutoCord
-    from .utils.context import Contexter
 
 
 class Discord(commands.Cog):
@@ -199,7 +199,7 @@ class Discord(commands.Cog):
                            'this command is limited to working every 2 hours so you can\'t spam me')
 
     @commands.command()
-    async def ping(self, ctx: 'Contexter'):
+    async def ping(self, ctx: Contexter):
         """Check if your bot is online on both Steam and Discord"""
         embed = discord.Embed(color=discord.Colour.blurple()).set_author(name='Pong!')
         start = perf_counter()
