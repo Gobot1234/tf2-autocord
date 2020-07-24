@@ -29,6 +29,9 @@ class Sourcer(menus.PageSource):
             embed.set_image(url=f'attachment://{menu.file.filename}')
         return embed
 
+    def is_paginating(self):
+        return True
+
 
 class ScrollingPaginatorBase(menus.MenuPages):
     """The base for all "scrolling" paginators"""
