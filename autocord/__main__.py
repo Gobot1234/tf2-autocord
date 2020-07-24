@@ -38,7 +38,7 @@ class SteamClient(steam.Client):
         print('------------')
         self.steam_bots = [self.get_user(steam_bot) for steam_bot in preferences.bots_steam_ids]
 
-    @tasks.loop(minutes=30)
+    @tasks.loop(minutes=10)
     async def user_message(self, message):
         embed = discord.Embed(color=discord.Colour.dark_gold())
         embed.set_author(
@@ -72,33 +72,36 @@ class SteamClient(steam.Client):
                 self.user_message.start(message)
             else:
                 if message.content.startswith('Trade '):
-                    color = 0x5C7E10 if 'accepted' in message.content else discord.Colour.red()
-                    embed = discord.Embed(color=color)
-
-                    ids = re.findall(r'\d+', message.content)
-                    trade_id = ids[0]
-                    user_id = int(ids[1])
-                    trader = await self.fetch_user(user_id)  # api calls aren't that bad on steam
-                    message = message.content.replace(f" #{trade_id}", "")
-                    if trader is not None:
-                        message = message.replace(f'Trade with {user_id} is',
-                                                  f'A trade with {trader.name} has been marked as')
-                        message = message.replace('Summary:', '\n__Summary:__')
-                        message = message.replace('Asked:', '- **Asked:**')
-                        message = message.replace('Offered:', '- **Offered:**')
-                        embed.set_author(name=f'Received a trade from: {trader}',
-                                         url=trader.community_url, icon_url=trader.avatar_url)
-                    embed.description = message
-                    embed.set_footer(text=f'Trade #{trade_id}',
-                                     icon_url=self.bot.user.avatar_url)
-                    embed.timestamp = datetime.now()
-                    for channel in self.bot.channels:
-                        await channel.send(embed=embed)
+                    await self.send_trade_info(message)
                 else:
                     embed = discord.Embed(color=self.bot.colour, title='New Message:', description=message.content)
                     embed.set_footer(text=datetime.now().strftime('%c'), icon_url=self.bot.user.avatar_url)
                     for channel in self.bot.channels:
                         await channel.send(embed=embed)
+
+    async def send_trade_info(self, message: steam.Message):
+        color = 0x5C7E10 if 'accepted' in message.content else discord.Colour.red()
+        embed = discord.Embed(color=color)
+
+        ids = re.findall(r'\d+', message.content)
+        trade_id = ids[0]
+        user_id = int(ids[1])
+        trader = await self.fetch_user(user_id)  # api calls aren't that bad on steam
+        message = message.content.replace(f" #{trade_id}", "")
+        if trader is not None:
+            message = message.replace(f'Trade with {user_id} is',
+                                      f'A trade with {trader.name} has been marked as')
+            message = message.replace('Summary:', '\n__Summary:__')
+            message = message.replace('Asked:', '- **Asked:**')
+            message = message.replace('Offered:', '- **Offered:**')
+            embed.set_author(name=f'Received a trade from: {trader}',
+                             url=trader.community_url, icon_url=trader.avatar_url)
+        embed.description = message
+        embed.set_footer(text=f'Trade #{trade_id}',
+                         icon_url=self.bot.user.avatar_url)
+        embed.timestamp = datetime.now()
+        for channel in self.bot.channels:
+            await channel.send(embed=embed)
 
 
 class AutoCord(commands.Bot):
@@ -111,8 +114,9 @@ class AutoCord(commands.Bot):
 
         self.log: Optional[logging.Logger] = None
         self.session: Optional[aiohttp.ClientSession] = None
-        self.initial_extensions = [f'cogs.{file.name[:-3]}' for file in Path('cogs').glob('*.py')
-                                   if file.name != '__init__.py']
+        self.initial_extensions = [f'cogs.{file.name[:-3]}' for file in Path('cogs').iterdir()
+                                   if file.name.endswith('.py')
+                                   and file.name != '__init__.py']
         log.info(f'Extensions to be loaded are {human_join(self.initial_extensions)}')
         self.launch_time: datetime
         self.messages: List[discord.Message] = []

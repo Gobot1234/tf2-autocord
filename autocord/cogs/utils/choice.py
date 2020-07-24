@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Union
+from typing import Tuple
 
 import discord
 from discord.ext import commands
@@ -32,15 +32,16 @@ async def wait_for_any(ctx: commands.Context, lower=True) -> str:
     return choice.content.lower() if lower else choice.content
 
 
-async def wait_for_options(ctx: commands.Context, options: Union[tuple, list, str]) -> str:
+async def wait_for_options(ctx: commands.Context, *options: Tuple[str, ...]) -> str:
     def check(message: discord.Message):
         return message.author == ctx.author
 
     while 1:
+        lowered = [o.lower() for o in options]
         choice = await ctx.bot.wait_for('message', check=check)
         choice = choice.content.lower()
 
-        if choice in options:
+        if choice in lowered:
             return choice
         else:
             await ctx.send(f'"{choice}" is not a recognised option. '

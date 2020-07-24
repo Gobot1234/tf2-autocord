@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
-import json
 
 import discord
 from discord.ext import commands
@@ -117,7 +116,7 @@ class Steam(commands.Cog):
     async def acknowledged(self, ctx):
         """Used to acknowledge a user message
         This is so user messages don't get lost in the channel history"""
-        self.bot.client.user_message.stop()
+        self.bot.client.user_message.cancel()
         self.bot.client.first = True
         for message in self.bot.messages:
             try:
@@ -131,9 +130,9 @@ class Steam(commands.Cog):
     async def send(self, ctx, *, message):
         """Send is used to send a message to the bot
         eg. `{prefix}send {prefix}message 76561198248053954 Get on steam`"""
-        await ctx.trigger_typing()
-        await ctx.steam_bot.send(message)
-        await ctx.send(f'Sent `{message}` to the bot')
+        async with ctx.typing():
+            await ctx.steam_bot.send(message)
+            await ctx.send(f'Sent `{message}` to the bot')
 
     @commands.command(aliases=['bp'])
     async def backpack(self, ctx: 'Contexter'):
@@ -147,20 +146,6 @@ class Steam(commands.Cog):
             embed.description = f"{embed.description}\n[Your bot's backpack]({bptf}/profiles/{bot.id64})"
         embed.set_thumbnail(url=f'{bptf}/images/tf-icon.png')
         await ctx.send(embed=embed)
-
-    @commands.command()
-    @commands.is_owner()
-    async def cashout(self, ctx):
-        """Want to cash-out all your listings?
-        Be warned this command is quite difficult to fix once you run it"""
-        listings_json = json.load(open(f'{self.bot.templocation}/listings.json'))
-        await ctx.send(f'Cashing out {len(listings_json)} items, this may take a while')
-        for value in listings_json:
-            command = f'!update sku={value["sku"]}&intent=sell'  # TODO needs to use sku
-            await ctx.steam_bot.send_message(command)
-            await ctx.send(command)
-            await asyncio.sleep(3)
-        await ctx.send('Completed the intent update')
 
     @commands.command(aliases=['raw_add', 'add-raw', 'raw-add'])
     @commands.is_owner()
@@ -177,7 +162,7 @@ class Steam(commands.Cog):
         else:
             return await ctx.send('Please send either a file or a message')
         for item in items:
-            await self.bot.client.steam_bot.send(f'!add name={item}{ending if ending else ""}')
+            await self.bot.steam_bot.send(f'!add name={item}{ending if ending else ""}')
         await ctx.send(f'Done adding {len(items)} items')
 
     @commands.command()
@@ -193,7 +178,7 @@ class Steam(commands.Cog):
         qualities = ['Unique', 'Strange', 'Vintage', 'Genuine', 'Haunted', "Collector's"]
 
         await ctx.send('What do you want to do?\nUpdate, Remove or Add?')
-        choice = await wait_for_options(ctx, ('update', 'u', 'add', 'a', 'remove', 'r'))
+        choice = await wait_for_options(ctx, 'update', 'u', 'add', 'a', 'remove', 'r')
         if choice in ('update', 'u'):
             do = 'update'
         elif choice in ('add', 'a'):
@@ -245,7 +230,7 @@ class Steam(commands.Cog):
 
                     elif prefix in ('quality', 'q') and ngt3:
                         await ctx.send(f'Quality (enter {human_join(qualities, delimiter="/", final="or")})')
-                        quality = wait_for_options(ctx, [quality.lower() for quality in qualities])
+                        quality = wait_for_options(ctx, qualities)
                         if do == 'update':
                             command = f'{quality} {command}'
                         else:
@@ -258,7 +243,7 @@ class Steam(commands.Cog):
 
                     elif prefix in ('intent', 'i') and ngt4:
                         await ctx.send(f'Intent is to ({human_join(intents, final="or")}')
-                        intent = await wait_for_options(ctx, [intent.lower() for intent in intents])
+                        intent = await wait_for_options(ctx, *intents)
                         command = f'{command}&intent={intent}'
 
                         scclist.remove('Intent')
@@ -356,9 +341,9 @@ class Steam(commands.Cog):
                        f'Do you want to send the command to the bot?\nType yes or no')
 
         if await wait_for_bool(ctx):
-            await ctx.trigger_typing()
-            await ctx.steam_bot.send(command)
-            await ctx.send(':ok_hand: sent')
+            async with ctx.typing():
+                await ctx.steam_bot.send(command)
+                await ctx.send(':ok_hand: sent')
         else:
             await ctx.send(":thumbsdown: you didn't send the command")
 

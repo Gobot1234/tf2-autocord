@@ -7,28 +7,24 @@ import re
 import os
 import traceback
 from datetime import datetime
-from io import BytesIO
-from pathlib import Path
 from platform import python_version
 from subprocess import getoutput
 from time import perf_counter
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import discord
 import humanize
 import psutil
-import matplotlib.pyplot as plt
 import steam
 from discord.ext import commands, tasks
 
 from ..config import preferences
-from . import __version__
+from .. import __version__
 from .utils.choice import wait_for_owners
-from .utils.paginator import ScrollingPaginator
 from .utils.converters import SteamBot
 
 if TYPE_CHECKING:
-    from main import AutoCord
+    from ..__main__ import AutoCord
     from .utils.context import Contexter
 
 
@@ -142,81 +138,6 @@ class Discord(commands.Cog):
     async def after_github(self):
         if self.github_update.failed():
             traceback.print_exc()
-
-    @staticmethod
-    def gen_graph(points: int = None):
-        data = json.load(open('Login_details/profit_graphing.json', 'r'))
-        if points is None:
-            points = len(data)
-        ignored = len(data) - points
-        date_values = [date for date in data.keys()[ignored:]]  # generate x values
-        tot_values = [float(value[0]) for value in data.values()[ignored:]]  # generate the y values
-        tod_values = [float(value[1]) for value in data.values()[ignored:]]
-        pre_values = [float(value[2]) for value in data.values()[ignored:]]
-
-        # plot the number in the list and set the line thickness.
-        plt.setp(plt.plot(date_values, tod_values, linewidth=3), color='blue')
-        plt.setp(plt.plot(date_values, tot_values, linewidth=3), color='orange')
-        plt.setp(plt.plot(date_values, pre_values, linewidth=3), color='green')
-
-        plt.title(f'A graph to show your bot\'s profit over the last {points} days', fontsize=16)
-        plt.xlabel('Date', fontsize=10)
-        plt.ylabel('Keys', fontsize=10)
-        plt.tick_params(axis='x', labelsize=8, rotation=90)
-        plt.gca().legend(('Days profit', 'Total profit', 'Projected profit'))
-        plt.tight_layout(h_pad=20, w_pad=20)
-        buf = BytesIO()
-        plt.savefig(buf, format='png', transparent=True)
-        buf.seek(0)
-        plt.close()
-        return discord.File(buf, filename='graph.png')
-
-    @commands.command()
-    @commands.is_owner()
-    async def last(self, ctx, bot: Optional[SteamBot] = None, days: int = None):
-        """Used to get the last x days profit
-        eg. `{prefix}last 7` (days has to be an integer)"""
-        async with ctx.typing():
-            if bot is None:
-                bots_data = []
-                for file in Path('config'):
-                    if file.name.startswith('profit_graphing.json'):
-                        bots_data.append(json.load(open(f'config/{file.name}')))
-            else:
-                bots_data = [json.load(open(f'config/profit_graphing {bot.id64}.json'))]
-            for data in bots_data:
-                if days is None or days > len(data):
-                    days = len(data)
-                ignored = len(data) - days
-                file = await steam.utils.to_thread(self.gen_graph, days)
-                entries = [f'__**{date}**__ - Days profit **{day}** keys. Total profit '
-                           f'**{total}** keys. Predicted profit **{predicted}** keys. '
-                           f'Total trades **{trades}**' for date, (day, total, predicted, trades) in
-                           reversed(list(data.items())[ignored:])]
-                last = ScrollingPaginator(title=f'Last {days} days profit', entries=entries, file=file)
-                await last.start(ctx)
-
-    @commands.command()
-    @commands.is_owner()
-    async def graph(self, ctx, bot: Optional[SteamBot] = None, points: int = 0):
-        """Used to generate a graph of all of your profit whilst using the bot"""
-        async with ctx.typing():
-            if bot is None:
-                bots_data = []
-                for file in Path('config').glob('**'):
-                    if file.name.startswith('profit_graphing.json'):
-                        bots_data.append(len(json.load(open(f'config/{file.name}'))))
-            else:
-                bots_data = [len(json.load(open(f'config/profit_graphing {bot.id64}.json')))]
-            for len_points in bots_data:
-                if points == 0 or points > len_points:
-                    points = len_points
-                if points <= 1:
-                    points = 3
-                file = await steam.utils.to_thread(self.gen_graph, points)
-                embed = discord.Embed(title=f'Last {points} days profit', color=self.bot.color)
-                embed.set_image(url='attachment://graph.png')
-                await ctx.send(embed=embed, file=file)
 
     @commands.command(aliases=['about', 'stats', 'status'])
     async def info(self, ctx):

@@ -3,3 +3,4 @@ steamio>0.3.3
 git+git://github.com/Rapptz/discord-ext-menus@master#egg=discord-ext-menus
 jishaku
 humanize
+psutil

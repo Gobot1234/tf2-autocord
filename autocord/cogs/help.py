@@ -3,12 +3,14 @@
 import difflib
 import logging
 import os
+import traceback
 from re import split
+from typing import List
 
 import discord
 from discord.ext import commands, menus
 
-from . import __version__
+from .. import __version__
 from .utils.formats import format_exec
 from .utils.paginator import ScrollingPaginatorBase
 
@@ -17,7 +19,7 @@ log = logging.getLogger(__name__)
 
 class HelpCommandPaginator(ScrollingPaginatorBase):
     """The paginator for our HelpCommand"""
-    def __init__(self, bot: commands.Bot, entries: list, help_command):
+    def __init__(self, bot: commands.Bot, entries: List[str], help_command: "HelpCommand"):
         super().__init__(entries=entries)
         self.bot = bot
         self.page = 0
@@ -46,38 +48,6 @@ class HelpCommandPaginator(ScrollingPaginatorBase):
                          icon_url=self.ctx.author.avatar_url)
         embed.set_footer(text=f'Use "{self.help_command.clean_prefix}help <command>" for more info on a command.',
                          icon_url=self.bot.user.avatar_url)
-        await self.message.edit(embed=embed)
-
-    async def next_page(self):
-        self.page += 1
-        try:
-            cog = self.bot.get_cog(self.entries[self.page])
-        except IndexError:
-            return
-        else:
-            embed = await self.invoke(cog)
-            await self.message.edit(embed=embed)
-
-    async def previous_page(self):
-        self.page -= 1
-        try:
-            cog = self.bot.get_cog(self.entries[self.page])
-        except IndexError:
-            return
-        else:
-            embed = await self.invoke(cog)
-            await self.message.edit(embed=embed)
-
-    async def first_page(self):
-        self.page = 0
-        cog = self.bot.get_cog(self.entries[self.page])
-        embed = await self.invoke(cog)
-        await self.message.edit(embed=embed)
-
-    async def final_page(self):
-        self.page = len(self.entries) - 1
-        cog = self.bot.get_cog(self.entries[self.page])
-        embed = await self.invoke(cog)
         await self.message.edit(embed=embed)
 
     async def invoke(self, cog: commands.Cog):
@@ -256,11 +226,9 @@ class Help(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         """The event triggered when an error is raised while invoking a command"""
-        original = error
         error = getattr(error, 'original', error)
 
-        ignored = (commands.CommandNotFound, commands.UserInputError)
-        if isinstance(error, ignored):
+        if isinstance(error, (commands.CommandNotFound, commands.UserInputError)):
             return
 
         if isinstance(error, (commands.MissingRequiredArgument, commands.BadArgument)):
@@ -272,10 +240,10 @@ class Help(commands.Cog):
         else:
             title = 'Unspecified error'
         embed = discord.Embed(title=f':warning: **{title}**',
-                              description=f'```py\n{format_exec(original)}```',
+                              description=f'```py\n{format_exec(error)}```',
                               color=discord.Colour.red())
         await ctx.send(embed=embed)
-        raise original
+        traceback.print_exc()
 
 
 def setup(bot):
