@@ -21,14 +21,14 @@ import matplotlib.pyplot as plt
 import steam
 from discord.ext import commands, tasks
 
-from config import preferences
+from ..config import preferences
 from . import __version__
 from .utils.choice import wait_for_owners
 from .utils.paginator import ScrollingPaginator
 from .utils.converters import SteamBot
 
 if TYPE_CHECKING:
-    from ..main import AutoCord
+    from main import AutoCord
     from .utils.context import Contexter
 
 
@@ -188,7 +188,7 @@ class Discord(commands.Cog):
                 if days is None or days > len(data):
                     days = len(data)
                 ignored = len(data) - days
-                file = await ctx.run_async(self.gen_graph, days)
+                file = await steam.utils.to_thread(self.gen_graph, days)
                 entries = [f'__**{date}**__ - Days profit **{day}** keys. Total profit '
                            f'**{total}** keys. Predicted profit **{predicted}** keys. '
                            f'Total trades **{trades}**' for date, (day, total, predicted, trades) in
@@ -213,7 +213,7 @@ class Discord(commands.Cog):
                     points = len_points
                 if points <= 1:
                     points = 3
-                file = await ctx.run_async(self.gen_graph, points)
+                file = await steam.utils.to_thread(self.gen_graph, points)
                 embed = discord.Embed(title=f'Last {points} days profit', color=self.bot.color)
                 embed.set_image(url='attachment://graph.png')
                 await ctx.send(embed=embed, file=file)

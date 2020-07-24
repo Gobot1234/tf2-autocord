@@ -6,4 +6,6 @@ venv
 .venv
 .idea
 
-/logs
+/autocord/logs
+/autocord/config/preferences.py
+/autocord/config/sensitives.py

@@ -46,7 +46,8 @@ class Steam(commands.Cog):
         - One item.
         `{prefix}add name The Team Captain`
         - It also allows the chaining of commands.
-        `{prefix}add names This&intent=sell, That, The other&quality=Strange`"""
+        `{prefix}add names This&intent=sell, That, The other&quality=Strange`
+        """
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 

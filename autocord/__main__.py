@@ -4,18 +4,17 @@ import logging
 import re
 from pathlib import Path
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 import aiohttp
 import discord
 import humanize
 import steam
 from discord.ext import commands, tasks
-import jishaku
 
-from cogs.utils.context import Contexter
-from cogs.utils.formats import human_join
-from config import preferences, sensitives
+from .cogs.utils import Contexter
+from .cogs.utils import human_join
+from .config import preferences, sensitives
 
 if TYPE_CHECKING:
     import asyncio
@@ -27,7 +26,7 @@ class SteamClient(steam.Client):
     def __init__(self, loop: 'asyncio.AbstractEventLoop', bot: 'AutoCord'):
         super().__init__(loop=loop)
         self.bot = bot
-        self.steam_bots = None
+        self.steam_bots: Optional[List[steam.User]] = None
         self.first = True
 
     async def on_ready(self) -> None:
@@ -110,19 +109,21 @@ class AutoCord(commands.Bot):
         self.client = SteamClient(loop=self.loop, bot=self)
         self.first = True
 
-        self.log = None
-        self.session = None
-        self.initial_extensions = None
+        self.log: Optional[logging.Logger] = None
+        self.session: Optional[aiohttp.ClientSession] = None
+        self.initial_extensions = [f'cogs.{file.name[:-3]}' for file in Path('cogs').glob('*.py')
+                                   if file.name != '__init__.py']
+        log.info(f'Extensions to be loaded are {human_join(self.initial_extensions)}')
         self.launch_time: datetime
-        self.messages = []
-        self.colour = preferences.embed_colour
+        self.messages: List[discord.Message] = []
+        self.colour = discord.Colour(preferences.embed_colour)
 
     @property
     def owners(self) -> List[discord.User]:
         return [self.get_user(owner_id) for owner_id in self.owner_ids]
 
     @property
-    def channels(self) -> List[Union[discord.TextChannel, discord.User]]:
+    def channels(self) -> List[discord.abc.Messageable]:
         return [self.get_channel(preferences.channel_id)] or self.owners
 
     @property
@@ -157,7 +158,7 @@ class AutoCord(commands.Bot):
 
         log_file = Path('logs', 'bot.log')
         log_file.parent.mkdir(exist_ok=True)
-        filename = f'logs/out--{datetime.now().strftime("%d-%m-%Y")}.log'
+        filename = f'autocord/logs/out--{datetime.now().strftime("%d-%m-%Y")}.log'
         file_handler = logging.FileHandler(filename, encoding='utf-8', mode='w')
         file_handler.setFormatter(log_format)
 
@@ -165,8 +166,7 @@ class AutoCord(commands.Bot):
         log.addHandler(file_handler)
 
         logging.getLogger("discord").setLevel(logging.WARNING)
-        logging.getLogger("steam").setLevel(logging.DEBUG)
-        logging.getLogger("websockets").setLevel(logging.WARNING)
+        logging.getLogger("steam").setLevel(logging.WARNING)
         logging.getLogger("matplotlib").setLevel(logging.WARNING)
         log.info('Finished setting up logging')
 
@@ -174,9 +174,6 @@ class AutoCord(commands.Bot):
         self.setup_logging()
 
         self.session = aiohttp.ClientSession(loop=self.loop)
-        self.initial_extensions = [f'cogs.{file.name[:-3]}' for file in Path('cogs').glob('*.py')
-                                   if file.name != '__init__.py']
-        log.info(f'Extensions to be loaded are {human_join(self.initial_extensions)}')
         for extension in self.initial_extensions:
             try:
                 self.load_extension(extension)
@@ -196,15 +193,13 @@ class AutoCord(commands.Bot):
         )
         await super().start(sensitives.token)
 
-    async def get_context(self, message, *, cls=None):
+    async def get_context(self, message, *, cls: Optional[commands.Context] = None):
         return await super().get_context(message, cls=cls or Contexter)
 
     async def close(self):
-        log.debug('About to close the ClientSession')
+        log.debug('Shutting down')
         await self.session.close()
-        log.debug('About to close Steam')
         await self.client.close()
-        log.info('About to close Discord')
         await super().close()
 
 

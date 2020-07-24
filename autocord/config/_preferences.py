@@ -4,7 +4,7 @@
 # and the path to your files folder eg. C:/Users/Nicklason/Desktop/all the code for the bots/files
 bots_steam_ids = {
     # bot id         : files location for that bot
-    76561198400794682: 'C:/Users/Nicklason/Desktop/all the code for the bots/files',
+    76561198400794682: r'C:/Users/Nicklason/Desktop/all the code for the bots/files',
 }
 # Your command prefix can either be ! ? . or / as they are used by tf2automatic
 command_prefix = '!'

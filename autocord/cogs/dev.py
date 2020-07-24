@@ -209,48 +209,47 @@ class Development(commands.Cog):
     @git.command()
     async def push(self, ctx, add_first: typing.Optional[bool], *, commit_msg):
         """Push changes to the GitHub repo"""
-        if ctx.author == self.bot.get_user(340869611903909888):
-            errored = ('fatal', 'error')
-            embed = discord.Embed(title='GitHub Commit & Push', description='', colour=discord.Colour.blurple())
-            message = await ctx.send(embed=embed)
-            await message.add_reaction(ctx.emoji.loading)
-            if add_first:
-                add = await ctx.get_output('git add .')
-                if any([word in add.split() for word in errored]):
-                    await message.add_reaction(ctx.emoji.cross)
-                    await message.remove_reaction(ctx.emoji.loading, self.bot.user)
-                    embed.description = f'{embed.description}{ctx.emoji.cross} **Add result:**```js\n{add}```\n'
-                    return await message.edit(embed=embed)
-                else:
-                    add = f'```js\n{add}```' if add else ':ok_hand:'
-                    embed.description = f'{embed.description}{ctx.emoji.tick} **Add result:**{add}\n'
-                await message.edit(embed=embed)
-
-            commit = await ctx.get_output(f'git commit -m "{commit_msg}"')
-            if any([word in commit.split() for word in errored]):
+        if ctx.author.id != 340869611903909888:
+            return await ctx.send('Why are you running this?')
+        errored = ('fatal', 'error')
+        embed = discord.Embed(title='GitHub Commit & Push', description='', colour=discord.Colour.blurple())
+        message = await ctx.send(embed=embed)
+        await message.add_reaction(ctx.emoji.loading)
+        if add_first:
+            add = await ctx.get_output('git add .')
+            if any([word in add.split() for word in errored]):
                 await message.add_reaction(ctx.emoji.cross)
                 await message.remove_reaction(ctx.emoji.loading, self.bot.user)
-                embed.description = f'{embed.description}{ctx.emoji.cross} **Commit result:**```js\n{commit}```'
+                embed.description = f'{embed.description}{ctx.emoji.cross} **Add result:**```js\n{add}```\n'
                 return await message.edit(embed=embed)
             else:
-                embed.description = f'{embed.description}{ctx.emoji.tick} **Commit result:**```js\n{commit}```'
+                add = f'```js\n{add}```' if add else ':ok_hand:'
+                embed.description = f'{embed.description}{ctx.emoji.tick} **Add result:**{add}\n'
             await message.edit(embed=embed)
 
-            push = await ctx.get_output('git push')
-            if any([word in push.split() for word in errored]):
-                await message.add_reaction(ctx.emoji.cross)
-                await message.remove_reaction(ctx.emoji.loading, self.bot.user)
-                embed.description = f'{embed.description}\n{ctx.emoji.cross} **Push result:**```js\n{push}```'
-                return await message.edit(embed=embed)
-            else:
-                await message.add_reaction(ctx.emoji.tick)
-                embed.description = f'{embed.description}\n{ctx.emoji.tick} **Push result:**```js\n{push}```'
-
-            await message.remove_reaction(ctx.emoji.loading, ctx.guild.me)
-            await message.edit(embed=embed)
-            await ctx.bin(message)
+        commit = await ctx.get_output(f'git commit -m "{commit_msg}"')
+        if any([word in commit.split() for word in errored]):
+            await message.add_reaction(ctx.emoji.cross)
+            await message.remove_reaction(ctx.emoji.loading, self.bot.user)
+            embed.description = f'{embed.description}{ctx.emoji.cross} **Commit result:**```js\n{commit}```'
+            return await message.edit(embed=embed)
         else:
-            await ctx.send('Why are you running this?')
+            embed.description = f'{embed.description}{ctx.emoji.tick} **Commit result:**```js\n{commit}```'
+        await message.edit(embed=embed)
+
+        push = await ctx.get_output('git push')
+        if any([word in push.split() for word in errored]):
+            await message.add_reaction(ctx.emoji.cross)
+            await message.remove_reaction(ctx.emoji.loading, self.bot.user)
+            embed.description = f'{embed.description}\n{ctx.emoji.cross} **Push result:**```js\n{push}```'
+            return await message.edit(embed=embed)
+        else:
+            await message.add_reaction(ctx.emoji.tick)
+            embed.description = f'{embed.description}\n{ctx.emoji.tick} **Push result:**```js\n{push}```'
+
+        await message.remove_reaction(ctx.emoji.loading, ctx.guild.me)
+        await message.edit(embed=embed)
+        await ctx.bin(message)
 
     @git.command()
     async def pull(self, ctx, hard: bool = False):

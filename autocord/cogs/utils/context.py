@@ -1,38 +1,35 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
-from typing import Callable, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List
+from subprocess import getoutput
 
 import aiohttp
-from subprocess import getoutput
 
 from discord import PartialEmoji, HTTPException, Message
 from discord.ext import commands
 
 if TYPE_CHECKING:
     import steam
+    from main import AutoCord
 
 
 async def json_or_text(response):
     try:
         return await response.json()
     except aiohttp.ContentTypeError:
-        return await response.text(encoding='utf-8')
+        return await response.text()
 
 
 class Contexter(commands.Context):
-    def __init__(self, **attrs):
-        super().__init__(**attrs)
+    bot: "AutoCord"
 
     @property
     def steam_bots(self) -> List[steam.User]:
         return self.bot.client.steam_bots
 
     async def get_output(self, command: str) -> str:
-        return await self.run_async(getoutput, command)
-
-    async def run_async(self, func: Callable, *args):
-        return await self.bot.loop.run_in_executor(None, func, *args)
+        return await steam.utils.to_thread(getoutput, command)
 
     async def bool(self, value: bool):
         try:
@@ -54,7 +51,7 @@ class Contexter(commands.Context):
         else:
             await message.delete()
 
-    async def request(self, method, url, **kwargs):
+    async def request(self, method: str, url: str, **kwargs):
         for tries in range(5):
             async with self.bot.session.request(method, url, **kwargs) as r:
                 data = await json_or_text(r)
@@ -64,7 +61,7 @@ class Contexter(commands.Context):
 
                 if r.status == 429:
                     try:
-                        await asyncio.sleep(r.headers('X-Retry-After'))
+                        await asyncio.sleep(r.headers['X-Retry-After'])
                     except KeyError:
                         await asyncio.sleep(2 ** tries)
                     continue
