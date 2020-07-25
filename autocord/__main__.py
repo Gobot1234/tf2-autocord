@@ -97,7 +97,6 @@ class SteamClient(steam.Client):
         steam_id = steam.SteamID(int(user_id))
         trader = await self.fetch_user(steam_id.id64) or steam_id  # api calls aren't that bad on steam
         message = message.content.replace(f" #{trade_id}", "")
-
         message = message.replace(f"Trade with {user_id} is", f"A trade with {trader} has been marked as",)
         message = message.replace("Summary:", "\n__Summary:__")
         message = message.replace("Asked:", "- **Asked:**")
@@ -110,8 +109,7 @@ class SteamClient(steam.Client):
         embed.description = message
         embed.set_footer(text=f"Trade #{trade_id}", icon_url=self.bot.user.avatar_url)
         embed.timestamp = datetime.now()
-        for channel in self.bot.channels:
-            await channel.send(embed=embed)
+        await self.send(embed=embed)
 
     async def send_review_info(self, message: steam.Message):
         if "not active" in message.content:
@@ -119,25 +117,21 @@ class SteamClient(steam.Client):
             embed.set_footer(
                 text=f'• {datetime.now().strftime("%c")}', icon_url=self.bot.user.avatar_url,
             )
-            await self.send(embed=embed)
         elif "not exist" in message.content:
             embed = discord.Embed(color=self.bot.colour, title="Offer review status:", description=message.content,)
             embed.set_footer(
                 text=f'• {datetime.now().strftime("%c")}', icon_url=self.bot.user.avatar_url,
             )
-            for channel in self.bot.channels:
-                await channel.send(embed=embed)
         else:
             embed = discord.Embed(color=self.bot.colour)
-            ids = re.findall(r"\d+", message.content)
-            offer_num = ids[0]
-            trader_id = int(ids[1])
-            trader = self.bot.client.get_user(trader_id)
-            message = message.content.replace(f" #{offer_num}", "")
+            trade_id, user_id = re.findall(r"\d+", message.content)
+            steam_id = steam.SteamID(int(user_id))
+            trader = await self.fetch_user(steam_id.id64) or steam_id  # api calls aren't that bad on steam
+            message = message.content.replace(f" #{trade_id}", "")
             if trader is not None:
                 message = message.replace(
-                    f"Offer from {trader_id} is waiting for review",
-                    f"An offer (#{offer_num}) sent by {trader.name} ({trader_id}) is waiting for review",
+                    f"Offer from {trader} is waiting for review",
+                    f"An offer (#{trade_id}) sent by {trader} ({trader.id64}) is waiting for review",
                 )
                 message = message.replace("Summary:", "\n__Summary:__")
                 message = message.replace("Asked:", "- **Asked:**")
@@ -147,10 +141,10 @@ class SteamClient(steam.Client):
                 )
             embed.description = message
             embed.set_footer(
-                text=f'Offer #{offer_num} • {datetime.now().strftime("%c")}', icon_url=self.bot.user.avatar_url,
+                text=f'Offer #{trade_id} • {datetime.now().strftime("%c")}', icon_url=self.bot.user.avatar_url,
             )
-            await self.send(embed=embed)
             await self.send(f"{human_join([o.mention for o in self.bot.owners])} check this!")
+        await self.send(embed=embed)
 
     async def send(
         self, content: str = None, *, embed: discord.Embed = None, file: discord.File = None,
@@ -230,8 +224,6 @@ class AutoCord(commands.Bot):
         logging.getLogger("steam").setLevel(logging.WARNING)
         log.info("Finished setting up logging")
 
-    # TODO subclass load ext
-
     def load_extension(self, name: str):
         try:
             super().load_extension(name)
@@ -245,12 +237,7 @@ class AutoCord(commands.Bot):
 
         self.session = aiohttp.ClientSession(loop=self.loop)
         for extension in self.initial_extensions:
-            try:
-                self.load_extension(extension)
-            except Exception as e:
-                self.dispatch("extension_fail", extension, e)
-            else:
-                self.dispatch("extension_load", extension)
+            self.load_extension(extension)
         self.load_extension("jishaku")
 
         self.launch_time = datetime.utcnow()
