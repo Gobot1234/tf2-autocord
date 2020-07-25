@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import difflib
-import inspect
 import logging
 import os
 import traceback
@@ -34,7 +33,7 @@ class HelpCommand(commands.HelpCommand):  # https://gist.github.com/Rapptz/31a34
             if filtered:
                 value = '\u2002'.join(c.name for c in commands)
                 if cog and cog.description:
-                    value = '{0}\n{1}'.format(cog.description, value)
+                    value = '{0}\n\n{1}'.format(cog.description, value)
 
                 embed.add_field(name=name, value=value)
 

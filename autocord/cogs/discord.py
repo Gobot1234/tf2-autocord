@@ -179,14 +179,14 @@ class Discord(commands.Cog):
 
         embed.add_field(
             name=f"{ctx.emoji.dpy} Discord.py Version",
-            value=f"`{discord.__version__}` works with versions 1.1+ of discord.py",
+            value=f"`{discord.__version__}` works with versions 1.3.4+ of discord.py",
         )
         embed.add_field(
             name=f"{ctx.emoji.python} Python Version",
-            value=f"`{python_version()}` works with versions 3.6+ (uses f-strings)",
+            value=f"`{python_version()}` works with versions 3.7+",
         )
         embed.add_field(
-            name=f"{ctx.emoji.steam} Steam Version", value=f"`{steam.__version__}` works with versions that work",
+            name=f"{ctx.emoji.steam} Steam Version", value=f"`{steam.__version__}`",
         )
         dev = self.bot.get_user(340869611903909888)
         embed.set_footer(
