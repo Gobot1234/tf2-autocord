@@ -182,8 +182,7 @@ class Discord(commands.Cog):
             value=f"`{discord.__version__}` works with versions 1.3.4+ of discord.py",
         )
         embed.add_field(
-            name=f"{ctx.emoji.python} Python Version",
-            value=f"`{python_version()}` works with versions 3.7+",
+            name=f"{ctx.emoji.python} Python Version", value=f"`{python_version()}` works with versions 3.7+",
         )
         embed.add_field(
             name=f"{ctx.emoji.steam} Steam Version", value=f"`{steam.__version__}`",
