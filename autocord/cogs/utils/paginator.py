@@ -26,7 +26,7 @@ class Sourcer(menus.PageSource):
         if menu.thumbnail:
             embed.set_thumbnail(url=menu.thumbnail)
         if menu.file:
-            embed.set_image(url=f'attachment://{menu.file.filename}')
+            embed.set_image(url=f"attachment://{menu.file.filename}")
         return embed
 
     def is_paginating(self):
@@ -35,29 +35,41 @@ class Sourcer(menus.PageSource):
 
 class ScrollingPaginatorBase(menus.MenuPages):
     """The base for all "scrolling" paginators"""
+
     def __init__(self, *, entries: List[str], timeout=90):
         source = Sourcer(entries)
         super().__init__(source, timeout=timeout)
         self.entries = entries
 
-    @menus.button('ℹ')
+    @menus.button("ℹ")
     async def show_info(self, payload):
         """Shows this message"""
-        embed = discord.Embed(title='Help with this message')
+        embed = discord.Embed(title="Help with this message")
         docs = [(button.emoji, button.action.__doc__) for button in self.buttons.values()]
-        docs = '\n'.join(f'{button} - {doc}' for (button, doc) in docs)
-        embed.description = f'What do the buttons do?:\n{docs}'
+        docs = "\n".join(f"{button} - {doc}" for (button, doc) in docs)
+        embed.description = f"What do the buttons do?:\n{docs}"
         return await self.message.edit(embed=embed)
 
 
 class ScrollingPaginator(ScrollingPaginatorBase):
     """For paginating text"""
-    def __init__(self, *, title: str, entries: list, per_page: int = 10,
-                 author: str = None, author_icon_url: str = None,
-                 footer: str = None, footer_icon_url: str = None,
-                 joiner: str = '\n', timeout: int = 90,
-                 thumbnail: str = None, colour: discord.Colour = discord.Colour.blurple(),
-                 file: discord.File = None):
+
+    def __init__(
+        self,
+        *,
+        title: str,
+        entries: list,
+        per_page: int = 10,
+        author: str = None,
+        author_icon_url: str = None,
+        footer: str = None,
+        footer_icon_url: str = None,
+        joiner: str = "\n",
+        timeout: int = 90,
+        thumbnail: str = None,
+        colour: discord.Colour = discord.Colour.blurple(),
+        file: discord.File = None,
+    ):
 
         super().__init__(entries=entries, timeout=timeout)
         self.title = title
@@ -101,16 +113,18 @@ class TextSourcer(Sourcer):
 
 class TextPaginator(ScrollingPaginator):
     """For paginating code blocks in an embed"""
+
     def __init__(self, *, text: str, title: str, python: bool = True, **kwargs):
         paginator = commands.Paginator(
             prefix=f'{kwargs.get("prefix", "```")}py' if python else kwargs.get("prefix", "```"),
-            suffix=kwargs.get('suffix', '```'))
+            suffix=kwargs.get("suffix", "```"),
+        )
         for line in text.splitlines():
             paginator.add_line(line)
         entries = [page for page in paginator.pages]
         super().__init__(title=title, entries=entries, per_page=1985, **kwargs)
 
-    @menus.button('⏹')
+    @menus.button("⏹")
     async def stop_pages(self, payload):
         """Deletes this message"""
         return await self.message.delete()

@@ -18,15 +18,15 @@ def format_error(error: Exception, *, strip=False):
     return formatted
 
 
-def human_join(seq: List[str], delimiter=', ', final='and'):
+def human_join(seq: List[str], delimiter=", ", final="and"):
     size = len(seq)
     if size == 0:
-        return ''
+        return ""
 
     if size == 1:
         return seq[0]
 
     if size == 2:
-        return f'{seq[0]} {final} {seq[1]}'
+        return f"{seq[0]} {final} {seq[1]}"
 
-    return f'{delimiter.join(seq[:-1])} {final} {seq[-1]}'
+    return f"{delimiter.join(seq[:-1])} {final} {seq[-1]}"

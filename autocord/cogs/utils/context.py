@@ -39,10 +39,11 @@ class Contexter(commands.Context):
 
     async def bin(self, message: Message, *, timeout: float = 90):
         def check(reaction, user):
-            return user == self.author and str(reaction.emoji) == '🗑️'
-        await message.add_reaction('🗑️')
+            return user == self.author and str(reaction.emoji) == "🗑️"
+
+        await message.add_reaction("🗑️")
         try:
-            *_, = await self.bot.wait_for('reaction_add', timeout=timeout, check=check)
+            (*_,) = await self.bot.wait_for("reaction_add", timeout=timeout, check=check)
         except asyncio.TimeoutError:
             try:
                 await message.clear_reactions()
@@ -61,7 +62,7 @@ class Contexter(commands.Context):
 
                 if r.status == 429:
                     try:
-                        await asyncio.sleep(r.headers['X-Retry-After'])
+                        await asyncio.sleep(r.headers["X-Retry-After"])
                     except KeyError:
                         await asyncio.sleep(2 ** tries)
                     continue
@@ -73,17 +74,17 @@ class Contexter(commands.Context):
             return None
 
     class emoji:  # this is so we can go ctx.emoji.tick
-        tick = PartialEmoji(name='tick', id=688829439659737095)
-        cross = PartialEmoji(name='cross', id=688829441123942416)
+        tick = PartialEmoji(name="tick", id=688829439659737095)
+        cross = PartialEmoji(name="cross", id=688829441123942416)
 
-        discord = PartialEmoji(name='discord', id=626486432793493540)
-        dpy = PartialEmoji(name='dpy', id=622794044547792926)
-        steam = PartialEmoji(name='steam', id=622621553800249364)
-        automatic = PartialEmoji(name='tf2automatic', id=624658370447671297)
-        autocord = PartialEmoji(name='tf2autocord', id=624658299224326148)
-        python = PartialEmoji(name='python', id=622621989474926622)
+        discord = PartialEmoji(name="discord", id=626486432793493540)
+        dpy = PartialEmoji(name="dpy", id=622794044547792926)
+        steam = PartialEmoji(name="steam", id=622621553800249364)
+        automatic = PartialEmoji(name="tf2automatic", id=624658370447671297)
+        autocord = PartialEmoji(name="tf2autocord", id=624658299224326148)
+        python = PartialEmoji(name="python", id=622621989474926622)
 
-        loading = PartialEmoji(name='loading', id=661210169870516225, animated=True)
+        loading = PartialEmoji(name="loading", id=661210169870516225, animated=True)
 
-        cpu = PartialEmoji(name='cpu', id=622621524418887680)
-        ram = PartialEmoji(name='ram', id=689212498544820301)
+        cpu = PartialEmoji(name="cpu", id=622621524418887680)
+        ram = PartialEmoji(name="ram", id=689212498544820301)

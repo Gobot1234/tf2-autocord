@@ -19,10 +19,10 @@ class Steam(commands.Cog):
     @staticmethod
     async def update_classifieds(ctx, items):
         is_list = isinstance(items, list)
-        this = 'these' if is_list else 'this'
-        command = 'commands' if is_list else 'command'
-        pretty_name = human_join(items, delimiter='`, `', final='` and `')
-        await ctx.send(f'Do you want to send {this} `{pretty_name}` {command} to the bot?')
+        this = "these" if is_list else "this"
+        command = "commands" if is_list else "command"
+        pretty_name = human_join(items, delimiter="`, `", final="` and `")
+        await ctx.send(f"Do you want to send {this} `{pretty_name}` {command} to the bot?")
         if await wait_for_bool(ctx):
             async with ctx.typing():
                 if is_list:
@@ -50,15 +50,15 @@ class Steam(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
-    @add.command(name='name')
+    @add.command(name="name")
     async def a_name(self, ctx, *, item):
         """Handles singular classified additions"""
-        await self.update_classifieds(ctx, f'!add name={item}')
+        await self.update_classifieds(ctx, f"!add name={item}")
 
-    @add.command(name='names')
+    @add.command(name="names")
     async def a_names(self, ctx, *, items):
         """Handles multiple classified additions"""
-        items = [f'!add name={item.strip()}' for item in items.split(',')]
+        items = [f"!add name={item.strip()}" for item in items.split(",")]
         await self.update_classifieds(ctx, items)
 
     @commands.group(invoke_without_command=True)
@@ -75,15 +75,15 @@ class Steam(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
-    @update.command(name='name')
+    @update.command(name="name")
     async def u_name(self, ctx, *, item):
         """Handles singular updates"""
-        await self.update_classifieds(ctx, f'!update name={item}')
+        await self.update_classifieds(ctx, f"!update name={item}")
 
-    @update.command(name='names')
+    @update.command(name="names")
     async def u_names(self, ctx, *, items):
         """Handles multiple updates"""
-        items = [f'!update name={item.strip()}' for item in items.split(',')]
+        items = [f"!update name={item.strip()}" for item in items.split(",")]
         await self.update_classifieds(ctx, items)
 
     @commands.group(invoke_without_command=True)
@@ -100,15 +100,15 @@ class Steam(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
-    @remove.command(name='item')
+    @remove.command(name="item")
     async def r_item(self, ctx, *, item):
         """Handles singular removals"""
-        await self.update_classifieds(ctx, f'!remove name={item}')
+        await self.update_classifieds(ctx, f"!remove name={item}")
 
-    @remove.command(name='items')
+    @remove.command(name="items")
     async def r_items(self, ctx, *, items):
         """Handles multiple removals"""
-        items = [f'!add name={item.strip()}' for item in items.split(',')]
+        items = [f"!add name={item.strip()}" for item in items.split(",")]
         await self.update_classifieds(ctx, items)
 
     @commands.command()
@@ -132,27 +132,29 @@ class Steam(commands.Cog):
         eg. `{prefix}send {prefix}message 76561198248053954 Get on steam`"""
         async with ctx.typing():
             await ctx.steam_bot.send(message)
-            await ctx.send(f'Sent `{message}` to the bot')
+            await ctx.send(f"Sent `{message}` to the bot")
 
-    @commands.command(aliases=['bp'])
-    async def backpack(self, ctx: 'Contexter'):
+    @commands.command(aliases=["bp"])
+    async def backpack(self, ctx: "Contexter"):
         """Get a link to your inventory and your bot's"""
-        bptf = 'https://backpack.tf'
+        bptf = "https://backpack.tf"
         embed = discord.Embed(
-            title='Backpack.tf', url=bptf,
+            title="Backpack.tf",
+            url=bptf,
             description=f"[Your backpack]({bptf}/profiles/{self.bot.client.user.id64})\n",
-            color=0x58788F)
+            color=0x58788F,
+        )
         for bot in ctx.steam_bots:
             embed.description = f"{embed.description}\n[Your bot's backpack]({bptf}/profiles/{bot.id64})"
-        embed.set_thumbnail(url=f'{bptf}/images/tf-icon.png')
+        embed.set_thumbnail(url=f"{bptf}/images/tf-icon.png")
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['raw_add', 'add-raw', 'raw-add'])
+    @commands.command(aliases=["raw_add", "add-raw", "raw-add"])
     @commands.is_owner()
     async def add_raw(self, ctx, *, ending=None):
         """Add lots of items, from both a .txt file or a discord message"""
-        await ctx.send('Paste all the items you want to add on a new line, or attach a text file')
-        message = await self.bot.wait_for('message', check=lambda m: m.author == ctx.author)
+        await ctx.send("Paste all the items you want to add on a new line, or attach a text file")
+        message = await self.bot.wait_for("message", check=lambda m: m.author == ctx.author)
         items = []
         if message.content:
             items.extend(message.content.splitlines())
@@ -160,190 +162,220 @@ class Steam(commands.Cog):
             file = await message.attachments[0].read()
             items.extend(file.decode().splitlines())
         else:
-            return await ctx.send('Please send either a file or a message')
+            return await ctx.send("Please send either a file or a message")
         for item in items:
             await self.bot.steam_bot.send(f'!add name={item}{ending if ending else ""}')
-        await ctx.send(f'Done adding {len(items)} items')
+        await ctx.send(f"Done adding {len(items)} items")
 
     @commands.command()
     @commands.is_owner()
     async def scc(self, ctx):
         """SCC - Steam Command Creator is a ~~worse~~ better version of Hackerino's command generator tool"""
         ngt1, ngt2, ngt3, ngt4, ngt5, ngt6, ngt7, ngt8, ngt9 = [True for _ in range(9)]
-        scclist = ['__You can change the:__\n',
-                   'Price', 'Limit', 'Quality',
-                   'Intent', 'Craftable', 'Australium',
-                   'Killstreak', 'Effect', 'Autopricing', "\nIf you don't type want to change any type escape"]
-        intents = ['Bank', 'Buy', 'Sell']
-        qualities = ['Unique', 'Strange', 'Vintage', 'Genuine', 'Haunted', "Collector's"]
+        scclist = [
+            "__You can change the:__\n",
+            "Price",
+            "Limit",
+            "Quality",
+            "Intent",
+            "Craftable",
+            "Australium",
+            "Killstreak",
+            "Effect",
+            "Autopricing",
+            "\nIf you don't type want to change any type escape",
+        ]
+        intents = ["Bank", "Buy", "Sell"]
+        qualities = [
+            "Unique",
+            "Strange",
+            "Vintage",
+            "Genuine",
+            "Haunted",
+            "Collector's",
+        ]
 
-        await ctx.send('What do you want to do?\nUpdate, Remove or Add?')
-        choice = await wait_for_options(ctx, 'update', 'u', 'add', 'a', 'remove', 'r')
-        if choice in ('update', 'u'):
-            do = 'update'
-        elif choice in ('add', 'a'):
-            do = 'add'
+        await ctx.send("What do you want to do?\nUpdate, Remove or Add?")
+        choice = await wait_for_options(ctx, "update", "u", "add", "a", "remove", "r")
+        if choice in ("update", "u"):
+            do = "update"
+        elif choice in ("add", "a"):
+            do = "add"
         else:
-            do = 'remove'
-        await ctx.send(f'What item do you want to {do}?')
+            do = "remove"
+        await ctx.send(f"What item do you want to {do}?")
         item = await wait_for_any(ctx)
         command = item
 
-        if do == 'remove':
-            f'!remove name={command}'
+        if do == "remove":
+            f"!remove name={command}"
         else:
-            await ctx.send('Do you want to add prefixes to the command?')
+            await ctx.send("Do you want to add prefixes to the command?")
             if await wait_for_bool(ctx):
-                await ctx.send('\n'.join(scclist))
+                await ctx.send("\n".join(scclist))
                 while 1:
-                    if True not in (ngt1, ngt2, ngt3, ngt4, ngt5, ngt6, ngt7, ngt8, ngt9):
+                    if True not in (ngt1, ngt2, ngt3, ngt4, ngt5, ngt6, ngt7, ngt8, ngt9,):
                         break
 
                     prefix = await wait_for_any(ctx)
 
-                    if prefix in ('price', 'p') and ngt1:
-                        await ctx.send('Buy price in refined metal')
+                    if prefix in ("price", "p") and ngt1:
+                        await ctx.send("Buy price in refined metal")
                         buy_price_ref = await wait_for_digit(ctx)
-                        await ctx.send('Buy price in keys')
+                        await ctx.send("Buy price in keys")
                         buy_price_keys = await wait_for_digit(ctx)
 
-                        await ctx.send('Sell price in refined metal')
+                        await ctx.send("Sell price in refined metal")
                         sell_price_ref = await wait_for_digit(ctx)
-                        await ctx.send('Sell price in keys')
+                        await ctx.send("Sell price in keys")
                         sell_price_keys = await wait_for_digit(ctx)
 
-                        command = f'{command}&buy.metal={buy_price_ref}&buy.keys={buy_price_keys}' \
-                                  f'&sell.metal={sell_price_ref}&sell.keys={sell_price_keys}'
-                        scclist.remove('Price')
-                        formatted = '\n'.join(scclist)
+                        command = (
+                            f"{command}&buy.metal={buy_price_ref}&buy.keys={buy_price_keys}"
+                            f"&sell.metal={sell_price_ref}&sell.keys={sell_price_keys}"
+                        )
+                        scclist.remove("Price")
+                        formatted = "\n".join(scclist)
                         ngt1 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('limit', 'l') and ngt2:
-                        await ctx.send('Max stock is')
+                    elif prefix in ("limit", "l") and ngt2:
+                        await ctx.send("Max stock is")
                         limit = await wait_for_digit(ctx)
-                        command = f'{command}&limit={limit}'
-                        scclist.remove('Limit')
-                        formatted = '\n'.join(scclist)
+                        command = f"{command}&limit={limit}"
+                        scclist.remove("Limit")
+                        formatted = "\n".join(scclist)
                         ngt2 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('quality', 'q') and ngt3:
+                    elif prefix in ("quality", "q") and ngt3:
                         await ctx.send(f'Quality (enter {human_join(qualities, delimiter="/", final="or")})')
                         quality = wait_for_options(ctx, qualities)
-                        if do == 'update':
-                            command = f'{quality} {command}'
+                        if do == "update":
+                            command = f"{quality} {command}"
                         else:
-                            command = f'{command}&quality={quality}'
+                            command = f"{command}&quality={quality}"
 
-                        scclist.remove('Quality')
-                        formatted = '\n'.join(scclist)
+                        scclist.remove("Quality")
+                        formatted = "\n".join(scclist)
                         ngt3 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('intent', 'i') and ngt4:
+                    elif prefix in ("intent", "i") and ngt4:
                         await ctx.send(f'Intent is to ({human_join(intents, final="or")}')
                         intent = await wait_for_options(ctx, *intents)
-                        command = f'{command}&intent={intent}'
+                        command = f"{command}&intent={intent}"
 
-                        scclist.remove('Intent')
-                        formatted = '\n'.join(scclist)
+                        scclist.remove("Intent")
+                        formatted = "\n".join(scclist)
                         ngt4 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('craftable', 'c') and ngt5:
-                        await ctx.send('Is the item craftable?')
+                    elif prefix in ("craftable", "c") and ngt5:
+                        await ctx.send("Is the item craftable?")
                         if await wait_for_bool(ctx):
-                            if do == 'update':
-                                command = f'Craftable {command}'
+                            if do == "update":
+                                command = f"Craftable {command}"
                             else:
-                                command = f'{command}&craftable=true'
+                                command = f"{command}&craftable=true"
                         else:
-                            if do == 'update':
-                                command = f'Non-Craftable {command}'
+                            if do == "update":
+                                command = f"Non-Craftable {command}"
                             else:
-                                command = f'{command}&quality=false'
+                                command = f"{command}&quality=false"
 
-                        scclist.remove('Craftable')
-                        formatted = '\n'.join(scclist)
+                        scclist.remove("Craftable")
+                        formatted = "\n".join(scclist)
                         ngt5 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('australium', 'au') and ngt6:
-                        await ctx.send('Is the item australium?')
+                    elif prefix in ("australium", "au") and ngt6:
+                        await ctx.send("Is the item australium?")
                         if await wait_for_bool(ctx):
-                            if do == 'update':
-                                command = f'Strange Australium {command}'
+                            if do == "update":
+                                command = f"Strange Australium {command}"
                             else:
-                                command = f'{command}&strange=true&australium=true'
+                                command = f"{command}&strange=true&australium=true"
 
-                        scclist.remove('Australium')
-                        formatted = '\n'.join(scclist)
+                        scclist.remove("Australium")
+                        formatted = "\n".join(scclist)
                         ngt6 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('killstreak', 'k') and ngt7:
-                        await ctx.send('Is the item killstreak (Killstreak (1), Specialized (2) or Professional (3))')
-                        options = ('1', 'k', 'killstreak', 'basic', '2', 's', 'specialized', '3', 'p', 'professional')
+                    elif prefix in ("killstreak", "k") and ngt7:
+                        await ctx.send("Is the item killstreak (Killstreak (1), Specialized (2) or Professional (3))")
+                        options = (
+                            "1",
+                            "k",
+                            "killstreak",
+                            "basic",
+                            "2",
+                            "s",
+                            "specialized",
+                            "3",
+                            "p",
+                            "professional",
+                        )
                         killstreak = await wait_for_options(ctx, options)
 
-                        if killstreak in ('1', 'k', 'killstreak', 'basic'):
-                            if do == 'update':
-                                command = f'Killstreak {command}'
+                        if killstreak in ("1", "k", "killstreak", "basic"):
+                            if do == "update":
+                                command = f"Killstreak {command}"
                             else:
-                                command = f'{command}&quality=1'
-                        elif killstreak in ('2', 's', 'specialized'):
-                            if do == 'update':
-                                command = f'Specialized {command}'
+                                command = f"{command}&quality=1"
+                        elif killstreak in ("2", "s", "specialized"):
+                            if do == "update":
+                                command = f"Specialized {command}"
                             else:
-                                command = f'{command}&quality=2'
-                        elif killstreak in ('3', 'p', 'professional'):
-                            if do == 'update':
-                                command = f'Professional {command}'
+                                command = f"{command}&quality=2"
+                        elif killstreak in ("3", "p", "professional"):
+                            if do == "update":
+                                command = f"Professional {command}"
                             else:
-                                command = f'{command}&quality=3'
+                                command = f"{command}&quality=3"
 
-                        scclist.remove('Killstreak')
-                        formatted = '\n'.join(scclist)
+                        scclist.remove("Killstreak")
+                        formatted = "\n".join(scclist)
                         ngt7 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('effect', 'e') and ngt8:  # effect suffix
-                        await ctx.send('What is the unusual effect? E.g Burning Flames')
+                    elif prefix in ("effect", "e") and ngt8:  # effect suffix
+                        await ctx.send("What is the unusual effect? E.g Burning Flames")
                         effect = await wait_for_any(ctx, lower=False)
-                        if do == 'update':
-                            command = f'{effect} {command}'
+                        if do == "update":
+                            command = f"{effect} {command}"
                         else:
-                            command = f'{command}&effect={effect}'
-                        scclist.remove('Effect')
-                        formatted = '\n'.join(scclist)
+                            command = f"{command}&effect={effect}"
+                        scclist.remove("Effect")
+                        formatted = "\n".join(scclist)
                         ngt8 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('autoprice', 'ap') and ngt9:
-                        await ctx.send('Is auto-pricing enabled?')
+                    elif prefix in ("autoprice", "ap") and ngt9:
+                        await ctx.send("Is auto-pricing enabled?")
                         choice = await wait_for_bool(ctx)
-                        command = f'{command}&autoprice={choice}'
-                        scclist.remove('Autopricing')
-                        formatted = '\n'.join(scclist)
+                        command = f"{command}&autoprice={choice}"
+                        scclist.remove("Autopricing")
+                        formatted = "\n".join(scclist)
                         ngt9 = False
-                        await ctx.send(f'Do you want to add more options to your command from the list:\n{formatted}')
+                        await ctx.send(f"Do you want to add more options to your command from the list:\n{formatted}")
 
-                    elif prefix in ('escape', 'esc'):
+                    elif prefix in ("escape", "esc"):
                         break
 
-            if do == 'update':
-                command = f'!update name={command}'
-            elif do == 'add':
-                command = f'!add name={command}'
+            if do == "update":
+                command = f"!update name={command}"
+            elif do == "add":
+                command = f"!add name={command}"
 
-        await ctx.send(f'Command to {do} {item} is `{command}`\n'
-                       f'Do you want to send the command to the bot?\nType yes or no')
+        await ctx.send(
+            f"Command to {do} {item} is `{command}`\nDo you want to send the command to the bot?\nType yes or no"
+        )
 
         if await wait_for_bool(ctx):
             async with ctx.typing():
                 await ctx.steam_bot.send(command)
-                await ctx.send(':ok_hand: sent')
+                await ctx.send(":ok_hand: sent")
         else:
             await ctx.send(":thumbsdown: you didn't send the command")
 
