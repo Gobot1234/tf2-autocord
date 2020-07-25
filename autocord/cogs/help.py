@@ -137,6 +137,7 @@ class Help(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         """The event triggered when an error is raised while invoking a command"""
+        traceback.print_exc()
         error = getattr(error, "original", error)
 
         if isinstance(error, (commands.CommandNotFound, commands.UserInputError)):
@@ -154,7 +155,6 @@ class Help(commands.Cog):
             title=f":warning: **{title}**", description=f"```py\n{format_exec(error)}```", color=discord.Colour.red(),
         )
         await ctx.send(embed=embed)
-        traceback.print_exc()
 
 
 def setup(bot):

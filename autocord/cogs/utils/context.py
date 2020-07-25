@@ -8,9 +8,9 @@ import aiohttp
 
 from discord import PartialEmoji, HTTPException, Message
 from discord.ext import commands
+import steam
 
 if TYPE_CHECKING:
-    import steam
     from ...__main__ import AutoCord
 
 
