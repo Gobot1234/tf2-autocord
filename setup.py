@@ -2,7 +2,7 @@
 
 import setuptools
 
-from .autocord import __version__
+from autocord import __version__
 
 with open("requirements.txt") as f:
     requirements = f.read().splitlines()
