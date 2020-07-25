@@ -5,188 +5,72 @@ import inspect
 import logging
 import os
 import traceback
-from re import split
-from typing import List
 
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
 
 from autocord import __version__
 from .utils.formats import format_exec
-from .utils.paginator import ScrollingPaginatorBase
 
 log = logging.getLogger(__name__)
 
 
-class HelpCommandPaginator(ScrollingPaginatorBase):
-    """The paginator for our HelpCommand"""
+class HelpCommand(commands.HelpCommand):  # https://gist.github.com/Rapptz/31a346ed1eb545ddeb0d451d81a60b3b
+    def get_ending_note(self):
+        return 'Use {0}{1} [command] for more info on a command.'.format(self.clean_prefix, self.invoked_with)
 
-    def __init__(self, bot: commands.Bot, entries: List[str], help_command: "HelpCommand"):
-        super().__init__(entries=entries)
-        self.bot = bot
-        self.help_command = help_command
-
-    async def send_initial_message(self, ctx, channel):
-        cog = self.bot.get_cog(self.entries[0])
-        return await ctx.send(embed=await self.invoke(cog))
-
-    @menus.button("ℹ")
-    async def show_info(self, payload):
-        """Shows this message"""
-        embed = discord.Embed(title=f"Help with {self.bot.user.name}'s commands", description=self.bot.description,)
-        embed.add_field(
-            name=(
-                f"Currently there are {len(self.entries)} cogs loaded, which includes "
-                f'(`{"`, `".join(self.entries)}`) :gear:'
-            ),
-            value=(
-                "`<...>` indicates a required argument\n"
-                "`[...]` indicates an optional argument.\n\n"
-                "**Don't however type these around your argument**"
-            ),
-        )
-        helper = [(button.emoji, inspect.getdoc(button.action)) for button in self.buttons.values()]
-        embed.add_field(
-            name="What do the buttons do?:",
-            value="\n".join(f"{button} - {doc}" for (button, doc) in helper if button and doc),
-        )
-        embed.set_author(
-            name=f"You were on page {self.current_page + 1}/{len(self.entries)} before",
-            icon_url=self.ctx.author.avatar_url,
-        )
-        embed.set_footer(
-            text=f'Use "{self.help_command.clean_prefix}help <command>" for more info on a command.',
-            icon_url=self.bot.user.avatar_url,
-        )
-        await self.message.edit(embed=embed)
-
-    async def invoke(self, cog: commands.Cog):
-        useable_commands = 0
-        embed = discord.Embed(description=cog.description, color=discord.Colour.blurple())
-        for command in await self.help_command.filter_commands(cog.walk_commands()):
-            try:
-                if await command.can_run(self.ctx) and not command.hidden:
-                    signature = self.help_command.get_command_signature(command)
-                    description = self.help_command.get_command_description(command)
-                    if command.parent:
-                        if command.parent.hidden:
-                            continue
-                        embed.add_field(name=signature, value=description)
-                        useable_commands += 1
-                    else:
-                        embed.add_field(name=signature, value=description, inline=False)
-                        useable_commands += 1
-            except commands.CommandError:
-                pass
-        embed.set_footer(
-            text=(
-                f"Page {self.current_page + 1}/{len(self.entries)}. Use"
-                f' "{self.help_command.clean_prefix}help <command>" for more info on a'
-                " command."
-            ),
-            icon_url=self.bot.user.avatar_url,
-        )
-        embed.title = (
-            f'Help with {cog.qualified_name} ({useable_commands} command{"s" if useable_commands != 1 else ""})'
-        )
-        return embed
-
-
-class HelpCommand(commands.HelpCommand):
-    """The custom help command class for the bot"""
-
-    def __init__(self):
-        super().__init__(
-            verify_checks=True, command_attrs={"help": "Shows help about the bot, a command, or a cog"},
-        )
-
-    def get_command_signature(self, command) -> str:
-        if not command.signature and not command.parent:
-            return f"`{self.clean_prefix}{command.name}`"
-        if command.signature and not command.parent:
-            sig = "` `".join(split(r"\B ", command.signature))
-            return f"`{self.clean_prefix}{command.name}` `{sig}`"
-        if not command.signature and command.parent:
-            return f"**╚╡** `{command.name}`"
-        else:
-            return "**╚╡** `{}` `{}`".format(command.name, "`, `".join(split(r"\B ", command.signature)))
-
-    @staticmethod
-    def get_command_aliases(command) -> str:
-        if not command.aliases:
-            return ""
-        else:
-            return f'command aliases are [`{"` | `".join(command.aliases)}`]'
-
-    def get_command_description(self, command) -> str:
-        if not command.short_doc:
-            return "There is no documentation for this command currently"
-        else:
-            return command.short_doc.format(prefix=self.clean_prefix)
-
-    def get_command_help(self, command) -> str:
-        if not command.help:
-            return "There is currently no documentation for this command"
-        else:
-            return command.help.format(prefix=self.clean_prefix)
+    def get_command_signature(self, command):
+        return '{0.qualified_name} {0.signature}'.format(command)
 
     async def send_bot_help(self, mapping):
-        cogs = [
-            name
-            for name, obj in self.context.bot.cogs.items()
-            if await discord.utils.maybe_coroutine(obj.cog_check, self.context)
-        ]
-        cogs.sort()
-        paginator = HelpCommandPaginator(entries=cogs, bot=self.context.bot, help_command=self)
-        await paginator.start(self.context)
+        embed = discord.Embed(title='Bot Commands', colour=self.context.bot.colour)
+        description = self.context.bot.description
+        if description:
+            embed.description = description
+
+        for cog, commands in mapping.items():
+            name = 'No Category' if cog is None else cog.qualified_name
+            filtered = await self.filter_commands(commands, sort=True)
+            if filtered:
+                value = '\u2002'.join(c.name for c in commands)
+                if cog and cog.description:
+                    value = '{0}\n{1}'.format(cog.description, value)
+
+                embed.add_field(name=name, value=value)
+
+        embed.set_footer(text=self.get_ending_note())
+        await self.get_destination().send(embed=embed)
 
     async def send_cog_help(self, cog):
-        paginator = HelpCommandPaginator(entries=[cog.qualified_name], bot=self.context.bot, help_command=self)
-        await paginator.start(self.context)
+        embed = discord.Embed(title='{0.qualified_name} Commands'.format(cog), colour=self.context.bot.colour)
+        if cog.description:
+            embed.description = cog.description
 
-    async def send_command_help(self, command):
-        ctx = self.context
+        filtered = await self.filter_commands(cog.get_commands(), sort=True)
+        for command in filtered:
+            embed.add_field(name=self.get_command_signature(command), value=command.short_doc or '...', inline=False)
 
-        if await command.can_run(ctx):
-            embed = discord.Embed(title=f"Help with `{command.name}`", color=0x2E3BAD)
-            embed.set_author(
-                name=f"We are currently looking at the {command.cog.qualified_name} cog and its command {command.name}",
-                icon_url=ctx.author.avatar_url,
-            )
-            signature = self.get_command_signature(command)
-            description = self.get_command_help(command)
-            aliases = self.get_command_aliases(command)
-
-            if command.parent:
-                embed.add_field(name=signature, value=description, inline=False)
-            else:
-                embed.add_field(name=f"{signature} {aliases}", value=description, inline=False)
-            embed.set_footer(text=f'Use "{self.clean_prefix}help <command>" for more info on a command.')
-            await ctx.send(embed=embed)
+        embed.set_footer(text=self.get_ending_note())
+        await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group):
-        ctx = self.context
-        bot = ctx.bot
+        embed = discord.Embed(title=group.qualified_name, colour=self.context.bot.colour)
+        if group.help:
+            embed.description = group.help
 
-        embed = discord.Embed(
-            title=f"Help with `{group.name}`", description=bot.get_command(group.name).help, color=bot.colour,
-        )
-        embed.set_author(
-            name=f"We are currently looking at the {group.cog.qualified_name} cog and its command {group.name}",
-            icon_url=ctx.author.avatar_url,
-        )
-        for command in group.walk_commands():
-            if await command.can_run(ctx):
-                signature = self.get_command_signature(command)
-                description = self.get_command_description(command)
-                aliases = self.get_command_aliases(command)
+        if isinstance(group, commands.Group):
+            filtered = await self.filter_commands(group.commands, sort=True)
+            for command in filtered:
+                embed.add_field(name=self.get_command_signature(command), value=command.short_doc or '...',
+                                inline=False)
 
-                if command.parent:
-                    embed.add_field(name=signature, value=description, inline=False)
-                else:
-                    embed.add_field(name=f"{signature} {aliases}", value=description, inline=False)
-        embed.set_footer(text=f'Use "{self.clean_prefix}help <command>" for more info on a command.')
-        await ctx.send(embed=embed)
+        embed.set_footer(text=self.get_ending_note())
+        await self.get_destination().send(embed=embed)
+
+    # This makes it so it uses the function above
+    # Less work for us to do since they're both similar.
+    # If you want to make regular command help look different then override it
+    send_command_help = send_group_help
 
     async def send_error_message(self, error):
         pass
