@@ -13,4 +13,6 @@ embed_colour = 0x2E3BAD
 # The id of the channel that you want trades sent to if it's None they will be sent to you via DM
 channel_id = None
 # A comma delimited list of the bots owners
-owner_ids = {340869611903909888}
+owner_ids = [340869611903909888,]
+# whether or not to show your status as playing TF2
+play_tf2 = False
