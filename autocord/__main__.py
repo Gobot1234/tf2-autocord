@@ -14,8 +14,16 @@ from discord.ext import commands, tasks
 
 from cogs.utils.context import Contexter
 from cogs.utils.formats import human_join
-import config.preferences as preferences
-import config.sensitives as sensitives
+
+try:
+    import config.preferences as preferences
+    import config.sensitives as sensitives
+except ImportError:
+    print(
+        "Have you set up the preferences and sensitives,"
+        'Make sure to remove the leading "_" from the files if you haven\'t'
+    )
+    raise SystemExit
 
 if TYPE_CHECKING:
     import asyncio
@@ -40,13 +48,17 @@ class SteamClient(steam.Client):
         print("Username:", self.user.name)
         print("ID:", self.user.id64)
         print("------------")
-        self.steam_bots = [self.get_user(steam_bot) for steam_bot in preferences.bots_steam_ids]
+        self.steam_bots = [
+            self.get_user(steam_bot) for steam_bot in preferences.bots_steam_ids
+        ]
 
     @tasks.loop(minutes=10)
     async def user_message(self, message):
         embed = discord.Embed(color=discord.Colour.dark_gold())
         embed.set_author(
-            name=f"Message from {message.author}", url=message.author.community_url, icon_url=message.author.avatar_url,
+            name=f"Message from {message.author}",
+            url=message.author.community_url,
+            icon_url=message.author.avatar_url,
         )
         embed.add_field(
             name="User Message:",
@@ -84,9 +96,14 @@ class SteamClient(steam.Client):
                 elif message.content.startswith("Offer "):
                     await self.send_review_info(message)
                 else:
-                    embed = discord.Embed(color=self.bot.colour, title="New Message:", description=message.content,)
+                    embed = discord.Embed(
+                        color=self.bot.colour,
+                        title="New Message:",
+                        description=message.content,
+                    )
                     embed.set_footer(
-                        text=datetime.now().strftime("%c"), icon_url=self.bot.user.avatar_url,
+                        text=datetime.now().strftime("%c"),
+                        icon_url=self.bot.user.avatar_url,
                     )
                     await self.send(embed=embed)
 
@@ -96,9 +113,13 @@ class SteamClient(steam.Client):
 
         trade_id, user_id = re.findall(r"\d+", message.content)
         steam_id = steam.SteamID(int(user_id))
-        trader = await self.fetch_user(steam_id.id64) or steam_id  # api calls aren't that bad on steam
+        trader = (
+            await self.fetch_user(steam_id.id64) or steam_id
+        )  # api calls aren't that bad on steam
         message = message.content.replace(f" #{trade_id}", "")
-        message = message.replace(f"Trade with {user_id} is", f"A trade with {trader} has been marked as",)
+        message = message.replace(
+            f"Trade with {user_id} is", f"A trade with {trader} has been marked as",
+        )
         message = message.replace("Summary:", "\n__Summary:__")
         message = message.replace("Asked:", "- **Asked:**")
         message = message.replace("Offered:", "- **Offered:**")
@@ -114,41 +135,63 @@ class SteamClient(steam.Client):
 
     async def send_review_info(self, message: steam.Message):
         if "not active" in message.content:
-            embed = discord.Embed(color=self.bot.colour, title="Offer review status:", description=message.content,)
+            embed = discord.Embed(
+                color=self.bot.colour,
+                title="Offer review status:",
+                description=message.content,
+            )
             embed.set_footer(
-                text=f'• {datetime.now().strftime("%c")}', icon_url=self.bot.user.avatar_url,
+                text=f'• {datetime.now().strftime("%c")}',
+                icon_url=self.bot.user.avatar_url,
             )
         elif "not exist" in message.content:
-            embed = discord.Embed(color=self.bot.colour, title="Offer review status:", description=message.content,)
+            embed = discord.Embed(
+                color=self.bot.colour,
+                title="Offer review status:",
+                description=message.content,
+            )
             embed.set_footer(
-                text=f'• {datetime.now().strftime("%c")}', icon_url=self.bot.user.avatar_url,
+                text=f'• {datetime.now().strftime("%c")}',
+                icon_url=self.bot.user.avatar_url,
             )
         else:
             embed = discord.Embed(color=self.bot.colour)
             trade_id, user_id = re.findall(r"\d+", message.content)
             steam_id = steam.SteamID(int(user_id))
-            trader = await self.fetch_user(steam_id.id64) or steam_id  # api calls aren't that bad on steam
+            trader = (
+                await self.fetch_user(steam_id.id64) or steam_id
+            )  # api calls aren't that bad on steam
             message = message.content.replace(f" #{trade_id}", "")
             if trader is not None:
                 message = message.replace(
                     f"Offer from {trader} is waiting for review",
-                    f"An offer (#{trade_id}) sent by {trader} ({trader.id64}) is waiting for review",
+                    f"An offer (#{trade_id}) sent by {trader} ({trader.id64}) is"
+                    " waiting for review",
                 )
                 message = message.replace("Summary:", "\n__Summary:__")
                 message = message.replace("Asked:", "- **Asked:**")
                 message = message.replace("Offered:", "- **Offered:**")
                 embed.set_author(
-                    name=f"Offer from: {trader.name}", url=trader.community_url, icon_url=trader.avatar_url,
+                    name=f"Offer from: {trader.name}",
+                    url=trader.community_url,
+                    icon_url=trader.avatar_url,
                 )
             embed.description = message
             embed.set_footer(
-                text=f'Offer #{trade_id} • {datetime.now().strftime("%c")}', icon_url=self.bot.user.avatar_url,
+                text=f'Offer #{trade_id} • {datetime.now().strftime("%c")}',
+                icon_url=self.bot.user.avatar_url,
             )
-            await self.send(f"{human_join([o.mention for o in self.bot.owners])} check this!")
+            await self.send(
+                f"{human_join([o.mention for o in self.bot.owners])} check this!"
+            )
         await self.send(embed=embed)
 
     async def send(
-        self, content: str = None, *, embed: discord.Embed = None, file: discord.File = None,
+        self,
+        content: str = None,
+        *,
+        embed: discord.Embed = None,
+        file: discord.File = None,
     ):
         for channel in self.bot.channels:
             await channel.send(content, embed=embed, file=file)
@@ -157,7 +200,9 @@ class SteamClient(steam.Client):
 class AutoCord(commands.Bot):
     def __init__(self):
         super().__init__(
-            command_prefix=commands.when_mentioned_or("!"), case_insensitive=True, owner_ids=preferences.owner_ids,
+            command_prefix=commands.when_mentioned_or("!"),
+            case_insensitive=True,
+            owner_ids=preferences.owner_ids,
         )
         self.client = SteamClient(loop=self.loop, bot=self)
         self.first = True
@@ -193,7 +238,9 @@ class AutoCord(commands.Bot):
         print("ID:", self.user.id)
         print("------------")
         owners = [f"{owner.name}'s" for owner in self.owners]
-        activity = discord.Activity(type=discord.ActivityType.watching, name=f"{human_join(owners)} trades")
+        activity = discord.Activity(
+            type=discord.ActivityType.watching, name=f"{human_join(owners)} trades"
+        )
         await self.change_presence(activity=activity)
 
     async def on_extension_load(self, extension: Exception):
@@ -244,7 +291,9 @@ class AutoCord(commands.Bot):
         self.launch_time = datetime.utcnow()
         self.loop.create_task(
             self.client.start(
-                username=sensitives.username, password=sensitives.password, shared_secret=sensitives.shared_secret,
+                username=sensitives.username,
+                password=sensitives.password,
+                shared_secret=sensitives.shared_secret,
             )
         )
         await super().start(sensitives.token)
