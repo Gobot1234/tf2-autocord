@@ -12,9 +12,9 @@ import humanize
 import steam
 from discord.ext import commands, tasks
 
-from .cogs.utils.context import Contexter
-from .cogs.utils.formats import human_join
-from .config import preferences, sensitives
+from cogs.utils.context import Contexter
+from cogs.utils.formats import human_join
+from config import preferences, sensitives
 
 if TYPE_CHECKING:
     import asyncio
