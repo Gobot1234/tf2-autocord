@@ -166,7 +166,7 @@ class AutoCord(commands.Bot):
         self.session: Optional[aiohttp.ClientSession] = None
         self.initial_extensions = [
             f"cogs.{file.name[:-3]}"
-            for file in Path("cogs").iterdir()
+            for file in (Path(__file__).parent / "cogs").iterdir()
             if file.name.endswith(".py") and file.name != "__init__.py"
         ]
         log.info(f"Extensions to be loaded are {human_join(self.initial_extensions)}")
