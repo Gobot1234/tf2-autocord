@@ -14,13 +14,12 @@ from discord.ext import commands, tasks
 
 from cogs.utils.context import Contexter
 from cogs.utils.formats import human_join
-import config
+import config.preferences as preferences
+import config.sensitives as sensitives
 
 if TYPE_CHECKING:
     import asyncio
 
-preferences = config.preferences
-sensitives = config.sensitives
 log = logging.getLogger(__name__)
 
 
