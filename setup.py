@@ -12,7 +12,7 @@ setuptools.setup(
     url="https://github.com/Gobot1234/tf2-autocord",
     requirements=requirements,
     version=__version__,
-    packages=["autocord"],
+    packages=["autocord", "autocord/cogs", "autocord/cogs/utils"],
     include_package_data=True,
     python_requires=">=3.7",
 )
