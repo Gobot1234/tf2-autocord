@@ -8,7 +8,7 @@ import traceback
 import discord
 from discord.ext import commands
 
-from autocord import __version__
+from . import __version__
 from .utils.formats import format_exec
 
 log = logging.getLogger(__name__)

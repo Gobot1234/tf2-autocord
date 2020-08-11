@@ -18,7 +18,7 @@ import psutil
 import steam
 from discord.ext import commands, tasks
 
-from autocord import __version__
+from . import __version__
 from .config import preferences
 from .utils.choice import wait_for_owners
 from .utils.converters import SteamBot
