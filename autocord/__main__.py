@@ -16,8 +16,8 @@ from cogs.utils.context import Contexter
 from cogs.utils.formats import human_join
 
 try:
-    import config.preferences as preferences
-    import config.sensitives as sensitives
+    import cogs.config.preferences as preferences
+    import cogs.config.sensitives as sensitives
 except ImportError:
     print(
         "Have you set up the preferences and sensitives,"

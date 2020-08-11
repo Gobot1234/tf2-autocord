@@ -57,11 +57,12 @@ async def wait_for_digit(ctx: commands.Context) -> str:
     while 1:
         digit = await ctx.bot.wait_for("message", check=check)
         digit = digit.content.lower()
-
-        if digit.isdigit():
-            return digit
-        else:
+        try:
+            float(digit)
+        except ValueError:
             await ctx.send(f'"{digit}" is not a digit.')
+        else:
+            return digit
 
 
 async def wait_for_owners(ctx: commands.Context) -> bool:

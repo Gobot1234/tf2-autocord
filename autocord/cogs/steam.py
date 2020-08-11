@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
@@ -9,15 +10,17 @@ from .utils.context import Contexter
 from .utils.formats import human_join
 from .utils.choice import wait_for_bool, wait_for_options, wait_for_any, wait_for_digit
 
+if TYPE_CHECKING:
+    from ..__main__ import AutoCord
+
 
 class Steam(commands.Cog):
     """Commands that are mainly owner restricted and only work if you are logged in to your Steam account"""
 
-    def __init__(self, bot):
+    def __init__(self, bot: "AutoCord"):
         self.bot = bot
 
-    @staticmethod
-    async def update_classifieds(ctx, items):
+    async def update_classifieds(self, ctx, items):
         is_list = isinstance(items, list)
         this = "these" if is_list else "this"
         command = "commands" if is_list else "command"
@@ -27,10 +30,10 @@ class Steam(commands.Cog):
             async with ctx.typing():
                 if is_list:
                     for item in items:
-                        await ctx.steam_bot.send(item)
+                        await self.bot.client.send(item)
                         await asyncio.sleep(3)
                 else:
-                    await ctx.steam_bot.send(items)
+                    await self.bot.client.send(items)
             await ctx.send(f'Sent{f" {len(items)}" if is_list else ""} {command} to the bot')
         else:
             await ctx.send("The command hasn't been sent")
@@ -131,7 +134,7 @@ class Steam(commands.Cog):
         """Send is used to send a message to the bot
         eg. `{prefix}send {prefix}message 76561198248053954 Get on steam`"""
         async with ctx.typing():
-            await ctx.steam_bot.send(message)
+            await self.bot.client.send(message)
             await ctx.send(f"Sent `{message}` to the bot")
 
     @commands.command(aliases=["bp"])
@@ -374,7 +377,7 @@ class Steam(commands.Cog):
 
         if await wait_for_bool(ctx):
             async with ctx.typing():
-                await ctx.steam_bot.send(command)
+                await self.bot.client.send(command)
                 await ctx.send(":ok_hand: sent")
         else:
             await ctx.send(":thumbsdown: you didn't send the command")
