@@ -203,6 +203,7 @@ class AutoCord(commands.Bot):
             command_prefix=commands.when_mentioned_or("!"),
             case_insensitive=True,
             owner_ids=preferences.owner_ids,
+            intents=discord.Intents.all()
         )
         self.client = SteamClient(loop=self.loop, bot=self)
         self.first = True
