@@ -226,7 +226,10 @@ class AutoCord(commands.Bot):
 
     @property
     def channels(self) -> List[discord.abc.Messageable]:
-        return [self.get_channel(preferences.channel_id)] or self.owners
+        channels = [self.get_channel(preferences.channel_id)]
+        if None in channels:
+            return self.owners
+        return channels
 
     @property
     def uptime(self):
