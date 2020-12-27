@@ -33,52 +33,10 @@ class Discord(commands.Cog):
 
     def __init__(self, bot: "AutoCord"):
         self.bot = bot
-        self.profit_graphing.start()
         self.github_update.start()
 
     def cog_unload(self):
-        self.profit_graphing.cancel()
         self.github_update.cancel()
-
-    @tasks.loop(seconds=20)
-    async def profit_graphing(self):
-        """A task that at 23:59 will get your profit
-        It will convert all your values to keys"""
-        self.bot.current_time = datetime.now().strftime("%d-%m-%Y %H:%M")
-        if self.bot.current_time.split()[1] == "23:59":
-            response = await self.bot.request("GET", "https://api.prices.tf/items/5021;6?src=bptf")
-            key_value = response["sell"]["metal"]
-
-            tod_profit = re.search(r"(made (.*?) today)", self.bot.graphplots).group(1)[5:-6]
-            tot_profit = re.search(r"(today, (.*?) in)", self.bot.graphplots).group(1)[7:-3]
-            try:
-                predicted_profit = re.search(r"(\((.*?) more)", self.bot.graphplots).group(1)[1:-5]
-            except ValueError:
-                predicted_profit = 0
-
-            fixed = []
-            for to_fix in [tod_profit, tot_profit, predicted_profit]:
-                if to_fix == 0:
-                    total = 0
-                elif ", " in to_fix:
-                    to_fix = to_fix.split(", ")
-                    keys = int(to_fix[0][:-5]) if "keys" in to_fix[0] else int(to_fix[0][:-4])
-                    multiplier = -1 if keys < 0 else 1
-                    ref = multiplier * float(to_fix[1][:-4])
-                    ref_keys = round(ref / key_value, 2)
-                    total = keys + ref_keys
-                else:
-                    ref = float(tod_profit[:-4])
-                    total = round(ref / key_value, 2)
-                fixed.append(total)
-
-            tod_profit, tot_profit, pred_profit = fixed
-            graph_data = [tod_profit, tot_profit, pred_profit, self.bot.trades]
-            temp_profit = {self.bot.current_time.split()[0]: graph_data}
-            data = json.load(open("Login_details/profit_graphing.json"))
-            data.update(temp_profit)
-            json.dump(data, open("Login_details/profit_graphing.json"), indent=4)
-            await asyncio.sleep(120)
 
     @tasks.loop(hours=24)
     async def github_update(self):
@@ -124,23 +82,9 @@ class Discord(commands.Cog):
                 for owner in self.bot.owners:
                     await owner.send(f"I won't update yet")
 
-    @profit_graphing.before_loop
-    async def before_graphing(self):
-        await self.bot.wait_until_ready()
-
     @github_update.before_loop
     async def before_github(self):
         await self.bot.wait_until_ready()
-
-    @profit_graphing.after_loop
-    async def after_graphing(self):
-        if self.profit_graphing.failed():
-            traceback.print_exc()
-
-    @github_update.after_loop
-    async def after_github(self):
-        if self.github_update.failed():
-            traceback.print_exc()
 
     @commands.command(aliases=["about", "stats", "status"])
     async def info(self, ctx):
