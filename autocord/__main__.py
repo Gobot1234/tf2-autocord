@@ -85,7 +85,7 @@ class SteamClient(steam.Client):
 
     async def on_message(self, message: steam.Message):
         if message.author in self.steam_bots:
-            log.info(f"Received a message from {message.author}")
+            log.info(f"Received a message from {message.author.name!r}")
             if message.content.startswith("Message from"):  # we have a user message
                 log.debug("Starting a user message loop")
                 self.user_message.cancel()
