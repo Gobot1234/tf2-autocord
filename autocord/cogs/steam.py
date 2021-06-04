@@ -1,26 +1,21 @@
-# -*- coding: utf-8 -*-
-
 import asyncio
-from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
 
-from .utils.context import Contexter
+from .utils.context import Context
 from .utils.formats import human_join
 from .utils.choice import wait_for_bool, wait_for_options, wait_for_any, wait_for_digit
-
-if TYPE_CHECKING:
-    from ..__main__ import AutoCord
 
 
 class Steam(commands.Cog):
     """Commands that are mainly owner restricted and only work if you are logged in to your Steam account"""
 
-    def __init__(self, bot: "AutoCord"):
+    def __init__(self, bot):
         self.bot = bot
 
-    async def update_classifieds(self, ctx, items):
+    @staticmethod
+    async def update_classifieds(ctx, items):
         is_list = isinstance(items, list)
         this = "these" if is_list else "this"
         command = "commands" if is_list else "command"
@@ -30,10 +25,10 @@ class Steam(commands.Cog):
             async with ctx.typing():
                 if is_list:
                     for item in items:
-                        await self.bot.client.send(item)
+                        await ctx.steam_bot.send(item)
                         await asyncio.sleep(3)
                 else:
-                    await self.bot.client.send(items)
+                    await ctx.steam_bot.send(items)
             await ctx.send(f'Sent{f" {len(items)}" if is_list else ""} {command} to the bot')
         else:
             await ctx.send("The command hasn't been sent")
@@ -134,11 +129,11 @@ class Steam(commands.Cog):
         """Send is used to send a message to the bot
         eg. `{prefix}send {prefix}message 76561198248053954 Get on steam`"""
         async with ctx.typing():
-            await self.bot.client.send(message)
+            await ctx.steam_bot.send(message)
             await ctx.send(f"Sent `{message}` to the bot")
 
     @commands.command(aliases=["bp"])
-    async def backpack(self, ctx: "Contexter"):
+    async def backpack(self, ctx: "Context"):
         """Get a link to your inventory and your bot's"""
         bptf = "https://backpack.tf"
         embed = discord.Embed(
@@ -254,10 +249,7 @@ class Steam(commands.Cog):
                     elif prefix in ("quality", "q") and ngt3:
                         await ctx.send(f'Quality (enter {human_join(qualities, delimiter="/", final="or")})')
                         quality = wait_for_options(ctx, qualities)
-                        if do == "update":
-                            command = f"{quality} {command}"
-                        else:
-                            command = f"{command}&quality={quality}"
+                        command = f"{quality} {command}" if do == "update" else command = f"{command}&quality={quality}"
 
                         scclist.remove("Quality")
                         formatted = "\n".join(scclist)
@@ -277,15 +269,9 @@ class Steam(commands.Cog):
                     elif prefix in ("craftable", "c") and ngt5:
                         await ctx.send("Is the item craftable?")
                         if await wait_for_bool(ctx):
-                            if do == "update":
-                                command = f"Craftable {command}"
-                            else:
-                                command = f"{command}&craftable=true"
+                            command = f"Craftable {command}" if do == "update" else f"{command}&craftable=true"
                         else:
-                            if do == "update":
-                                command = f"Non-Craftable {command}"
-                            else:
-                                command = f"{command}&quality=false"
+                            command = f"Non-Craftable {command}" if do == "update" else f"{command}&quality=false"
 
                         scclist.remove("Craftable")
                         formatted = "\n".join(scclist)
@@ -295,10 +281,7 @@ class Steam(commands.Cog):
                     elif prefix in ("australium", "au") and ngt6:
                         await ctx.send("Is the item australium?")
                         if await wait_for_bool(ctx):
-                            if do == "update":
-                                command = f"Strange Australium {command}"
-                            else:
-                                command = f"{command}&strange=true&australium=true"
+                            command = f"Strange Australium {command}" if do == "update" else  f"{command}&strange=true&australium=true"
 
                         scclist.remove("Australium")
                         formatted = "\n".join(scclist)
@@ -322,15 +305,9 @@ class Steam(commands.Cog):
                         killstreak = await wait_for_options(ctx, options)
 
                         if killstreak in ("1", "k", "killstreak", "basic"):
-                            if do == "update":
-                                command = f"Killstreak {command}"
-                            else:
-                                command = f"{command}&quality=1"
+                            command = f"Killstreak {command}" if do == "update" else f"{command}&quality=1"
                         elif killstreak in ("2", "s", "specialized"):
-                            if do == "update":
-                                command = f"Specialized {command}"
-                            else:
-                                command = f"{command}&quality=2"
+                            command = f"Specialized {command}" if do == "update" else f"{command}&quality=2"
                         elif killstreak in ("3", "p", "professional"):
                             if do == "update":
                                 command = f"Professional {command}"
@@ -345,10 +322,7 @@ class Steam(commands.Cog):
                     elif prefix in ("effect", "e") and ngt8:  # effect suffix
                         await ctx.send("What is the unusual effect? E.g Burning Flames")
                         effect = await wait_for_any(ctx, lower=False)
-                        if do == "update":
-                            command = f"{effect} {command}"
-                        else:
-                            command = f"{command}&effect={effect}"
+                        command = f"{effect} {command}" if do == "update" else f"{command}&effect={effect}"
                         scclist.remove("Effect")
                         formatted = "\n".join(scclist)
                         ngt8 = False
@@ -377,8 +351,8 @@ class Steam(commands.Cog):
 
         if await wait_for_bool(ctx):
             async with ctx.typing():
-                await self.bot.client.send(command)
-                await ctx.send(":ok_hand: sent")
+                await ctx.steam_bot.send(command)
+            await ctx.send(":ok_hand: sent")
         else:
             await ctx.send(":thumbsdown: you didn't send the command")
 

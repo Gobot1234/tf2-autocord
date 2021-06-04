@@ -5,12 +5,12 @@ from discord.ext import commands
 from steam.ext import commands as steam_commands
 
 if TYPE_CHECKING:
-    from .context import Contexter
+    from .context import Context
 
 
 class SteamCTX:
     @classmethod
-    def from_discord_context(cls, context: "Contexter"):
+    def from_discord_context(cls, context: "Context"):
         self = cls()
         self.bot = context.bot.client
         return self

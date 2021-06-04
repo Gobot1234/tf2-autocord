@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-
 import difflib
 import logging
-import os
 import traceback
 
 import discord
@@ -101,29 +98,6 @@ class Help(commands.Cog):
 
     def cog_unload(self):
         self.bot.help_command = self._original_help_command
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        try:
-            channel = self.bot.get_channel(int(open("channel.txt", "r").read()))
-            os.remove("channel.txt")
-        except FileNotFoundError:
-            pass
-        else:
-            if channel:
-                deleted = 0
-                async for m in channel.history(limit=50):
-                    if m.author == self.bot.user and deleted < 2:
-                        await m.delete()
-                        deleted += 1
-                    if m.author in self.bot.owners and m.content == "!restart":
-                        try:
-                            await m.delete()
-                        except discord.Forbidden:
-                            pass
-                await channel.send("Finished restarting...", delete_after=60)
-        print(f"Successfully logged in as {self.bot.user.name} and booted...!")
-        log.info(f"Successfully logged in as {self.bot.user.name} and booted...!")
 
     @commands.Cog.listener()
     async def on_connect(self):

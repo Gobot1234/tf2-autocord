@@ -73,7 +73,7 @@ async def wait_for_owners(ctx: commands.Context) -> bool:
         choice = await ctx.bot.wait_for("message", check=check)
         choice = choice.content.lower()
 
-        if choice in ("yes", "y", "ye", "yea", "yeah", "true", "t", "on", "enable", "1",):
+        if choice in ("yes", "y", "ye", "yea", "yeah", "true", "t", "on", "enable", "1"):
             return True
         elif choice in ("no", "n", "nop", "nope", "false", "f", "off", "disable", "0"):
             return False

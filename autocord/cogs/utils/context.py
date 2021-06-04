@@ -11,7 +11,7 @@ from discord.ext import commands
 import steam
 
 if TYPE_CHECKING:
-    from ...__main__ import AutoCord
+    from ... import AutoCord
 
 
 async def json_or_text(response):
@@ -21,7 +21,7 @@ async def json_or_text(response):
         return await response.text()
 
 
-class Contexter(commands.Context):
+class Context(commands.Context):
     bot: "AutoCord"
 
     @property
@@ -43,7 +43,7 @@ class Contexter(commands.Context):
 
         await message.add_reaction("🗑️")
         try:
-            (*_,) = await self.bot.wait_for("reaction_add", timeout=timeout, check=check)
+            await self.bot.wait_for("reaction_add", timeout=timeout, check=check)
         except asyncio.TimeoutError:
             try:
                 await message.clear_reactions()
